@@ -338,7 +338,7 @@ namespace
 		}
 		return num_parenthesis == 0;
 	}
-	void parse_rules(std::set<char> const& alphabet, std::map<char, std::string>& rules, stream_parser& parser, bool parse2D)
+	void parse_rules(std::set<char> const& alphabet, std::multimap<char, std::pair<double, std::string> >& rules, stream_parser& parser, bool parse2D)
 	{
 		parser.skip_comments_and_whitespace();
 		parser.assertChars("Rules");
@@ -355,16 +355,22 @@ namespace
 				throw LParser::ParserException("Invalid Alphabet character", parser.getLine(), parser.getCol());
 			if (alphabet.find(c) == alphabet.end())
 				throw LParser::ParserException(std::string("Replacement rule specified for char '") + c + "' which is not part of the alphabet. ", parser.getLine(), parser.getCol());
-			if (rules.find(c) != rules.end())
-				throw LParser::ParserException(std::string("Double entry '") + c + "' in rules specification ", parser.getLine(), parser.getCol());
+			//if (rules.find(c) != rules.end())
+			//	throw LParser::ParserException(std::string("Double entry '") + c + "' in rules specification ", parser.getLine(), parser.getCol());
 			char alphabet_char = c;
 			parser.skip_comments_and_whitespace();
 			parser.assertChars("->");
 			parser.skip_comments_and_whitespace();
+                        // handle stochastic rules
+                        double probability = 1.0;
+                        if (std::isdigit(parser.peekChar())) {
+                          probability = parser.readDouble();
+  			  parser.skip_comments_and_whitespace();
+                        }
 			std::string rule = parser.readQuotedString();
 			if (!isValidRule(alphabet, rule, parse2D))
 				throw LParser::ParserException(std::string("Invalid rule specification for entry '") + alphabet_char + "' in rule specification", parser.getLine(), parser.getCol());
-			rules[alphabet_char] = rule;
+			rules.insert(std::make_pair(alphabet_char, std::make_pair(probability, rule)));
 			parser.skip_comments_and_whitespace();
 			c = parser.getChar();
 			if (c == '}')
@@ -482,7 +488,18 @@ bool LParser::LSystem::draw(char c) const
 std::string const& LParser::LSystem::get_replacement(char c) const
 {
 	assert(get_alphabet().find(c) != get_alphabet().end());
-	return replacementrules.find(c)->second;
+        std::multimap<char, std::pair<double, std::string> >::const_iterator it = replacementrules.find(c);
+        assert(it != replacementrules.end());
+        double random = static_cast<double>(rand()) / RAND_MAX;
+        //std::cout << "random: " << random << std::endl;
+        double probability = it->second.first;
+        for (; it != replacementrules.end(); ++it) {
+          //std::cout << it->first << " -> " << it->second.first << " " << it->second.second << std::endl;
+          if (random <= probability)
+            return it->second.second;
+          probability += it->second.first;
+        }
+        assert(0);
 }
 double LParser::LSystem::get_angle() const
 {
