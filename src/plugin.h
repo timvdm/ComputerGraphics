@@ -1,3 +1,6 @@
+#ifndef INC_PLUGIN_H
+#define INC_PLUGIN_H
+
 #include "utils.h"
 
 #include <list>
@@ -67,3 +70,5 @@ namespace CG {
   };
 
 }
+
+#endif
