@@ -1,5 +1,7 @@
 #include "lines2d.h"
 
+#include <limits>
+
 namespace CG {
 
   std::pair<Point2D, Point2D> get_min_max(const Lines2D &lines)
@@ -97,8 +99,9 @@ namespace CG {
 
     // draw the lines
     img::EasyImage image(imageSizes.first, imageSizes.second, bgColor);
-    for (std::size_t i = 0; i < lines.size(); ++i)
+    for (std::size_t i = 0; i < lines.size(); ++i) {
       image.draw_line(lines[i].p1.x + 0.5, lines[i].p1.y + 0.5, lines[i].p2.x + 0.5, lines[i].p2.y + 0.5, lines[i].color);
+    }
 
     return image;
   }

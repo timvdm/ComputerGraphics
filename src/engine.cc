@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "Plugin.h"
+#include "plugin.h"
 
 img::EasyImage generate_image(const ini::Configuration &conf)
 {

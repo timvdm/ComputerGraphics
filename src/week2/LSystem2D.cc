@@ -1,7 +1,6 @@
 #include "../utils.h"
 #include "../plugin.h"
-
-#include "lines2d.h"
+#include "../lines2d.h"
 
 #include <fstream>
 #include <cmath>
@@ -113,7 +112,7 @@ namespace CG {
             }
         } else {
           // reached deepest recursive level -> draw the lines
-          for (std::size_t i = 0; i < commands.size(); ++i)
+          for (std::size_t i = 0; i < commands.size(); ++i) {
             switch (commands[i]) {
               case '-':
                 state.angle -= DEG_TO_RAD * lSystem.get_angle();
@@ -139,6 +138,7 @@ namespace CG {
                 }
                 break;                
             }
+          }
         }
       }
 

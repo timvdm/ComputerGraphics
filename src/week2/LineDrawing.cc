@@ -1,7 +1,9 @@
 #include "../utils.h"
 #include "../plugin.h"
 
-#include "lines2d.h"
+#include "../lines2d.h"
+
+#include <algorithm>
 
 namespace CG {
 

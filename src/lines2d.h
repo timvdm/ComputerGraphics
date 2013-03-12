@@ -1,7 +1,7 @@
 #ifndef INC_DATASTRUCTS_H
 #define INC_DATASTRUCTS_H
 
-#include "../utils/EasyImage.h"
+#include "utils/EasyImage.h"
 
 #include <vector>
 #include <cassert>
@@ -25,7 +25,7 @@ namespace CG {
      * @param g_ The green component.
      * @param b_ The blue component.
      */
-    Color(Real r_, Real g_, Real b_) : r(r_), g(g_), b(b_)
+    Color(Real r_ = 0.0, Real g_ = 0.0, Real b_ = 0.0) : r(r_), g(g_), b(b_)
     {
     }
 
@@ -37,6 +37,11 @@ namespace CG {
     Color(const std::vector<Real> &rgb) : r(rgb[0]), g(rgb[1]), b(rgb[2])
     {
       assert(rgb.size() == 3);
+    }
+
+    Color(const img::Color &color)
+      : r(color.red / 255.0), g(color.green / 255.0), b(color.blue / 255.0)
+    {
     }
 
     /**
