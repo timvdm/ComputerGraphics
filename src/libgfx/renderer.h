@@ -48,13 +48,6 @@ namespace GFX {
   }
 
 
-  std::string print(const vec4 &v)
-  {
-    std::stringstream ss;
-    ss << "(" << v.x() << ", " << v.y() << ", " << v.z() << ", " << v.w() << ")";
-    return ss.str();
-  }
-
   /**
    * @brief Interpolate a Color across a triangle using barycentric interpolation.
    *

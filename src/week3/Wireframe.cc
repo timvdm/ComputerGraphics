@@ -40,8 +40,10 @@ namespace CG {
           std::cerr << e.what() << std::endl;
           return img::EasyImage();
         }
-
+        
         GFX::mat4 T = GFX::projectionMatrix(eye[0], eye[1], eye[2]);
+
+        std::cout << "T: " << std::endl << T << std::endl;
 
         std::vector<GFX::Mesh> meshes;
         GFX::Lines2D lines;
@@ -94,11 +96,21 @@ namespace CG {
             for (std::size_t j = 0; j < meshes[i].faces().size(); ++j) {
               GFX::vec4 p1 = meshes[i].vertices()[meshes[i].faces()[j][0]];
               GFX::vec4 p2 = meshes[i].vertices()[meshes[i].faces()[j][1]];
+
+              std::cout << GFX::print(p1) << " - " << GFX::print(p2) << " --> ";
+
               p1 = T * p1;
               p2 = T * p2;
+              
+              std::cout << GFX::print(p1) << " - " << GFX::print(p2) << " --> ";
 
               GFX::Point2D projP1(p1.x() / -p1.z(), p1.y() / -p1.z());
               GFX::Point2D projP2(p2.x() / -p2.z(), p2.y() / -p2.z());
+
+              std::cout << projP1 << " - " << projP2 << std::endl;
+
+
+
               lines.push_back(GFX::Line2D(projP1, projP2, color));
             }
           }

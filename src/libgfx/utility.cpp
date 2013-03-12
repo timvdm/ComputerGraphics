@@ -9,15 +9,31 @@ namespace GFX {
 
     mat4 m(mat4::Identity());
 
-    m(0, 0) = - std::sin(eye.theta);
-    m(0, 1) = - std::cos(eye.theta) * std::cos(eye.phi);
-    m(0, 2) =   std::cos(eye.theta) * std::sin(eye.phi);
-    m(1, 0) =   std::cos(eye.theta);
-    m(1, 1) = - std::sin(eye.theta) * std::cos(eye.phi);
-    m(1, 2) =   std::sin(eye.theta) * std::sin(eye.phi);
-    m(2, 1) =   std::sin(eye.phi);
-    m(2, 2) =   std::cos(eye.phi);
+    double st = std::sin(eye.theta);
+    double ct = std::cos(eye.theta);
+    double sp = std::sin(eye.phi);
+    double cp = std::cos(eye.phi);
+
+    m(0, 0) = - st;
+    m(1, 0) = - ct * cp;
+    m(2, 0) =   ct * sp;
+    m(0, 1) =   ct;
+    m(1, 1) = - st * cp;
+    m(2, 1) =   st * sp;
+    m(1, 2) =   sp;
+    m(2, 2) =   cp;
+    m(2, 3) = - eye.r;
+    /*
+    m(0, 0) = - st;
+    m(0, 1) = - ct * cp;
+    m(0, 2) =   ct * sp;
+    m(1, 0) =   ct;
+    m(1, 1) = - st * cp;
+    m(1, 2) =   st * sp;
+    m(2, 1) =   sp;
+    m(2, 2) =   cp;
     m(3, 2) = - eye.r;
+    */
 
     return m;
   }
