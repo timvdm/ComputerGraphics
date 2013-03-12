@@ -1,7 +1,7 @@
 #include "../utils.h"
 #include "../plugin.h"
 
-#include "../lines2d.h"
+#include "../libgfx/lines2d.h"
 
 #include <algorithm>
 
@@ -46,18 +46,18 @@ namespace CG {
         assert((vLineIndexes.size() % 2) == 0);
 
         // extract points
-        Points2D points;
+        std::vector<GFX::Point2D> points;
         for (std::size_t i = 0; i < vPoints.size(); i += 2)
-          points.push_back(Point2D(vPoints[i], vPoints[i + 1]));
+          points.push_back(GFX::Point2D(vPoints[i], vPoints[i + 1]));
 
         // make sure the line point indexes are valid
         assert(*std::min_element(vLineIndexes.begin(), vLineIndexes.end()) >= 0);
         assert(*std::max_element(vLineIndexes.begin(), vLineIndexes.end()) < points.size());
 
         // extract lines
-        Lines2D lines;
+        GFX::Lines2D lines;
         for (std::size_t i = 0; i < vLineIndexes.size(); i += 2)
-          lines.push_back(Line2D(points[vLineIndexes[i]], points[vLineIndexes[i + 1]], lineColor));
+          lines.push_back(GFX::Line2D(points[vLineIndexes[i]], points[vLineIndexes[i + 1]], lineColor));
 
         // points copied to lines, not needed anymore
         points.clear();

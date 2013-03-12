@@ -1,6 +1,6 @@
 #include "../utils.h"
 #include "../plugin.h"
-#include "../lines2d.h"
+#include "../libgfx/lines2d.h"
 
 #include <fstream>
 #include <cmath>
@@ -42,12 +42,12 @@ namespace CG {
         ifs.close();
 
         // convert LSystem2D to set of lines
-        Lines2D lines;
+        GFX::Lines2D lines;
         drawLSystem(lSystem, lines);
 
         // set the line color
         for (std::size_t i = 0; i < lines.size(); ++i)
-          lines[i].color = Color(lineColor);
+          lines[i].color = GFX::Color(lineColor);
 
 
         return draw_lines(lines, size, bgColor);
@@ -85,11 +85,11 @@ namespace CG {
         }
 
         double angle;
-        Point2D pos;
-        std::vector<std::pair<double, Point2D> > stack;
+        GFX::Point2D pos;
+        std::vector<std::pair<double, GFX::Point2D> > stack;
       };
 
-      void drawLSystem(const LParser::LSystem2D &lSystem, const std::string &commands, Lines2D &lines, int iteration, LSystemState &state)
+      void drawLSystem(const LParser::LSystem2D &lSystem, const std::string &commands, GFX::Lines2D &lines, int iteration, LSystemState &state)
       {
         if (iteration > 0) {
           // recursive calls...
@@ -129,10 +129,10 @@ namespace CG {
               default:
                 {
                   // compute new position
-                  Point2D newPos(state.pos.x + std::cos(state.angle), state.pos.y + std::sin(state.angle));
+                  GFX::Point2D newPos(state.pos.x + std::cos(state.angle), state.pos.y + std::sin(state.angle));
                   // draw a line?
                   if (lSystem.draw(commands[i]))
-                    lines.push_back(Line2D(state.pos, newPos));
+                    lines.push_back(GFX::Line2D(state.pos, newPos));
                   // move to new position
                   state.pos = newPos;
                 }
@@ -142,7 +142,7 @@ namespace CG {
         }
       }
 
-      void drawLSystem(const LParser::LSystem2D &lSystem, Lines2D &lines)
+      void drawLSystem(const LParser::LSystem2D &lSystem, GFX::Lines2D &lines)
       {
         LSystemState state(DEG_TO_RAD * lSystem.get_starting_angle());
         drawLSystem(lSystem, lSystem.get_initiator(), lines, lSystem.get_nr_iterations(), state);

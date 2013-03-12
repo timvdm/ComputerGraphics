@@ -1,66 +1,33 @@
 #include "../utils.h"
 #include "../plugin.h"
 
-#include "../lines2d.h"
-
-#include "../libxyz/mesh.h"
-#include "../libxyz/polarcoord.h"
+#include "../libgfx/lines2d.h"
+#include "../libgfx/utility.h"
+#include "../libgfx/mesh.h"
 
 
 namespace CG {
 
-  Matrix projectionMatrix(const XYZ::PolarCoord &eye)
-  {
-    Matrix T;
-    T(1, 1) = - std::sin(eye.theta);
-    T(1, 2) = - std::cos(eye.theta) * std::cos(eye.phi);
-    T(1, 3) =   std::cos(eye.theta) * std::sin(eye.phi);
-    //T(1, 4) =   0.0;
-    T(2, 1) =   std::cos(eye.theta);
-    T(2, 2) = - std::sin(eye.theta) * std::cos(eye.phi);
-    T(2, 3) =   std::sin(eye.theta) * std::sin(eye.phi);
-    //T(2, 4) =   0.0;
-    //T(3, 1) =   0.0;
-    T(3, 2) =   std::sin(eye.phi);
-    T(3, 3) =   std::cos(eye.phi);
-    //T(3, 4) =   0.0;
-    //T(4, 1) =   0.0;
-    //T(4, 2) =   0.0;
-    T(4, 3) = - eye.r;
-    T(4, 4) =   1.0;
-    return T;
-  }
-
-  inline int nearest(double value)
-  {
-    return (value < 0.0) ? value - 0.5 : value + 0.5;
-  }
-
-  typedef Vector3D Vertex;
-  typedef std::vector<Vertex> VertexArray;
-
-  typedef std::vector<Color> ColorArray;
-
   class Wireframe : public Plugin
   {
     public:
-      img::Color extractColor(const ini::Entry &entry) const
+      GFX::Color extractColor(const ini::Entry &entry) const
       {
         try {
           std::vector<double> rgb = entry;
-          return img::Color(rgb.at(0) * 255, rgb.at(1) * 255, rgb.at(2) * 255);
+          return GFX::Color(rgb.at(0), rgb.at(1), rgb.at(2));
         } catch (const std::exception &e) {
           std::cerr << "Could not parse color (using default black)" << std::endl;
         }
         
-        return img::Color(0, 0, 0);
+        return GFX::Color(0, 0, 0);
       }
 
       img::EasyImage image(const ini::Configuration &conf)
       {
         int size;
         std::vector<double> eye;
-        img::Color bgColor;
+        GFX::Color bgColor;
         int nrFigures;
 
         // read General section from *.ini file
@@ -74,12 +41,10 @@ namespace CG {
           return img::EasyImage();
         }
 
-        XYZ::PolarCoord peye(eye);
+        GFX::mat4 T = GFX::projectionMatrix(eye[0], eye[1], eye[2]);
 
-        Matrix T = projectionMatrix(XYZ::PolarCoord(eye));
-
-        std::vector<XYZ::Mesh> meshes;
-        Lines2D lines;
+        std::vector<GFX::Mesh> meshes;
+        GFX::Lines2D lines;
 
         for (int i = 0; i < nrFigures; ++i) {
           std::string figureName = make_string("Figure", i);
@@ -91,7 +56,7 @@ namespace CG {
           Vector3D center;
           int nrPoints;
           int nrLines;
-          img::Color color;
+          GFX::Color color;
 
           try {
             std::string type = conf[figureName]["type"].as_string_or_die();
@@ -127,14 +92,14 @@ namespace CG {
 
           for (std::size_t i = 0; i < meshes.size(); ++i) {
             for (std::size_t j = 0; j < meshes[i].faces().size(); ++j) {
-              Vector3D p1 = meshes[i].vertices()[meshes[i].faces()[j][0]];
-              Vector3D p2 = meshes[i].vertices()[meshes[i].faces()[j][1]];
-              p1 = p1 * T;
-              p2 = p2 * T;
+              GFX::vec4 p1 = meshes[i].vertices()[meshes[i].faces()[j][0]];
+              GFX::vec4 p2 = meshes[i].vertices()[meshes[i].faces()[j][1]];
+              p1 = T * p1;
+              p2 = T * p2;
 
-              Point2D projP1(p1.x / -p1.z, p1.y / -p1.z);
-              Point2D projP2(p2.x / -p2.z, p2.y / -p2.z);
-              lines.push_back(Line2D(projP1, projP2, color));
+              GFX::Point2D projP1(p1.x() / -p1.z(), p1.y() / -p1.z());
+              GFX::Point2D projP2(p2.x() / -p2.z(), p2.y() / -p2.z());
+              lines.push_back(GFX::Line2D(projP1, projP2, color));
             }
           }
 
@@ -143,7 +108,7 @@ namespace CG {
 
 
 
-        return draw_lines(lines, size, bgColor);
+        return draw_lines(lines, size, img::Color(255 * bgColor.r, 255 * bgColor.g, 255 * bgColor.b));
       }
 
   };

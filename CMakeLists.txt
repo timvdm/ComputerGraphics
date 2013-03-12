@@ -1,8 +1,20 @@
 cmake_minimum_required(VERSION 2.8)
 project(ComputerGraphics)
 
-#set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+# setup Eigen3 includes
+include_directories(thirdparty/eigen3)
+
+set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
+#set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+
+set(libgfx_SRCS
+  src/utils/EasyImage.cc
+  #  src/utils/vector.cc
+  src/libgfx/utility.cpp
+  src/libgfx/lines2d.cc
+)
+
+add_library(libgfx SHARED ${libgfx_SRCS})
 
 set(cg_SRCS
   src/utils/EasyImage.cc
@@ -10,7 +22,6 @@ set(cg_SRCS
   src/utils/lparser.cc
   src/utils/vector.cc
   src/engine.cc
-  src/lines2d.cc
   src/week1/ColorRectangle.cc
   src/week1/Blocks.cc
   src/week1/Lines.cc
@@ -20,14 +31,7 @@ set(cg_SRCS
 )
 
 add_executable(engine ${cg_SRCS})
-
-set(libgfx_SRCS
-  src/utils/EasyImage.cc
-  #  src/utils/vector.cc
-  src/libgfx/utility.cpp
-)
-
-add_library(libgfx SHARED ${libgfx_SRCS})
+target_link_libraries(engine libgfx)
 
 add_executable(gfx src/gfx.cpp)
 target_link_libraries(gfx libgfx)

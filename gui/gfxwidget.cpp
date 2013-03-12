@@ -116,7 +116,7 @@ double lines[] = {
 
 void GfxWidget::render()
 {
-  render2();
+  render1();
 }
 
 void GfxWidget::render1()

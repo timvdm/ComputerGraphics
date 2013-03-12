@@ -1,6 +1,8 @@
 #ifndef GFX_PROGRAM_H
 #define GFX_PROGRAM_H
 
+#include <type_traits>
+
 namespace GFX {
 
   template<typename VertexShaderType, typename FragmentShaderType>
