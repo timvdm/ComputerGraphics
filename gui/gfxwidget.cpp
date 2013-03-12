@@ -2,6 +2,8 @@
 
 #include <libgfx/program.h>
 #include <libgfx/renderer.h>
+#include <libgfx/transform.h>
+
 
 GfxWidget::GfxWidget(QWidget *parent) : QLabel(parent), m_image(800, 600, QImage::Format_RGB32),
     m_context(800, 600), m_eye(GFX::vec3(0, 0, -1)), m_dragging(false)
@@ -156,7 +158,7 @@ void GfxWidget::render1()
                           0.5, -0.3, -0.5, 0, 1, 1,
                           0.0, -0.3,  0.5, 0, 1, 0 };
 
-  renderer.drawTriangles(triangles, 36, 6);
+  //renderer.drawTriangles(triangles, 36, 6);
 
 
   for (int i = 0; i < context.width(); ++i)

@@ -4,13 +4,16 @@ project(ComputerGraphics)
 # setup Eigen3 includes
 include_directories(thirdparty/eigen3)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
-#set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS "-Wno-enum-compare -std=c++11 ${CMAKE_CXX_FLAGS}")
+endif()
 
 set(libgfx_SRCS
   src/utils/EasyImage.cc
   #  src/utils/vector.cc
-  src/libgfx/utility.cpp
+  src/libgfx/transform.cpp
   src/libgfx/lines2d.cc
 )
 
@@ -32,8 +35,5 @@ set(cg_SRCS
 
 add_executable(engine ${cg_SRCS})
 target_link_libraries(engine libgfx)
-
-add_executable(gfx src/gfx.cpp)
-target_link_libraries(gfx libgfx)
 
 add_subdirectory(gui)

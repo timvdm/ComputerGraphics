@@ -1,5 +1,7 @@
-#include "utility.h"
+#include "transform.h"
 #include "spherecoord.h"
+
+#include <cmath>
 
 namespace GFX {
 
