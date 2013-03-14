@@ -45,8 +45,8 @@ namespace GFX {
     private:
       std::size_t index(int x, int y) const
       {
-        return m_height * x + y;
-        //return x + m_width * y;
+        //return m_height * x + y;
+        return x + m_width * y;
       }
 
       std::vector<ValueType> m_buffer;

@@ -88,39 +88,40 @@ struct SimpleFragmentShader
 };
 
 double lines[] = { 
-                   -0.5,  0.5, -0.5, 1, 0, 0,
-                    0.5,  0.5, -0.5, 0, 1, 0,
-                    0.5,  0.5, -0.5, 0, 1, 0,
-                    0.5, -0.5, -0.5, 0, 0, 1,
-                    0.5, -0.5, -0.5, 0, 0, 1,
-                   -0.5, -0.5, -0.5, 1, 1, 0,
-                   -0.5, -0.5, -0.5, 1, 1, 0,
-                   -0.5,  0.5, -0.5, 1, 0, 0,
+                   -0.5,  0.5, -0.5, 255,   0,   0,
+                    0.5,  0.5, -0.5,   0, 255,   0,
+                    0.5,  0.5, -0.5,   0, 255,   0,
+                    0.5, -0.5, -0.5,   0,   0, 255,
+                    0.5, -0.5, -0.5,   0,   0, 255,
+                   -0.5, -0.5, -0.5, 255, 255,   0,
+                   -0.5, -0.5, -0.5, 255, 255,   0,
+                   -0.5,  0.5, -0.5, 255,   0,   0,
 
-                   -0.5,  0.5,  0.5, 1, 0, 0,
-                    0.5,  0.5,  0.5, 0, 1, 0,
-                    0.5,  0.5,  0.5, 0, 1, 0,
-                    0.5, -0.5,  0.5, 0, 0, 1,
-                    0.5, -0.5,  0.5, 0, 0, 1,
-                   -0.5, -0.5,  0.5, 1, 1, 0,
-                   -0.5, -0.5,  0.5, 1, 1, 0,
-                   -0.5,  0.5,  0.5, 1, 0, 0,
+                   -0.5,  0.5,  0.5, 255,   0,   0,
+                    0.5,  0.5,  0.5,   0, 255,   0,
+                    0.5,  0.5,  0.5,   0, 255,   0,
+                    0.5, -0.5,  0.5,   0,   0, 255,
+                    0.5, -0.5,  0.5,   0,   0, 255,
+                   -0.5, -0.5,  0.5, 255, 255,   0,
+                   -0.5, -0.5,  0.5, 255, 255,   0,
+                   -0.5,  0.5,  0.5, 255,   0,   0,
 
-                   -0.5,  0.5, -0.5, 1, 0, 0,
-                   -0.5,  0.5,  0.5, 1, 0, 0,
-                    0.5,  0.5, -0.5, 0, 1, 0,
-                    0.5,  0.5,  0.5, 0, 1, 0,
-                    0.5, -0.5, -0.5, 0, 0, 1,
-                    0.5, -0.5,  0.5, 0, 0, 1,
-                   -0.5, -0.5, -0.5, 1, 1, 0,
-                   -0.5, -0.5,  0.5, 1, 1, 0
+                   -0.5,  0.5, -0.5, 255,   0,   0,
+                   -0.5,  0.5,  0.5, 255,   0,   0,
+                    0.5,  0.5, -0.5,   0, 255,   0,
+                    0.5,  0.5,  0.5,   0, 255,   0,
+                    0.5, -0.5, -0.5,   0,   0, 255,
+                    0.5, -0.5,  0.5,   0,   0, 255,
+                   -0.5, -0.5, -0.5, 255, 255,   0,
+                   -0.5, -0.5,  0.5, 255, 255,   0
 };
 
 
 void GfxWidget::render()
 {
   m_fps.startRender();
-  render2();
+  m_context.colorBuffer().clear(GFX::Color::black());
+  render1();
   m_fps.stopRender();
   qDebug() << "FPS: " << m_fps.fps();
 }
@@ -162,12 +163,12 @@ void GfxWidget::render1()
 
   renderer.drawLines(lines, 6 * 2 * 12, 6);
 
-  double triangles[] = { -0.5, -0.5,  0.3, 1, 0, 0,
-                          0.5, -0.5,  0.3, 0, 1, 0,
-                          0.0,  0.5,  0.3, 0, 0, 1,
-                         -0.5, -0.3, -0.5, 0, 0, 1,
-                          0.5, -0.3, -0.5, 0, 1, 1,
-                          0.0, -0.3,  0.5, 0, 1, 0 };
+  double triangles[] = { -0.5, -0.5,  0.3, 255,   0,   0,
+                          0.5, -0.5,  0.3,   0, 255,   0,
+                          0.0,  0.5,  0.3,   0,   0, 255,
+                         -0.5, -0.3, -0.5,   0,   0, 255,
+                          0.5, -0.3, -0.5,   0, 255, 255,
+                          0.0, -0.3,  0.5,   0, 255,   0 };
 
   renderer.drawTriangles(triangles, 36, 6);
 
@@ -175,7 +176,7 @@ void GfxWidget::render1()
   for (int i = 0; i < context.width(); ++i)
     for (int j = 0; j < context.height(); ++j) {
       const GFX::Color &color = context.colorBuffer()(i, j);
-      m_image.setPixel(i, context.height() - j - 1, QColor(255 * color.r, 255 * color.g, 255 * color.b).rgb());
+      m_image.setPixel(i, m_context.height() - j - 1, color.toARGB());
     }
   
   QPainter painter(this);
@@ -185,14 +186,14 @@ void GfxWidget::render1()
 
 void GfxWidget::render2()
 {
-  GFX::Context context(pixmap()->width(), pixmap()->height());
+  //GFX::Context context(pixmap()->width(), pixmap()->height());
 
   SimpleVertexShader vertexShader;
   SimpleFragmentShader fragmentShader;
   GFX::Program<SimpleVertexShader, SimpleFragmentShader> program(vertexShader, fragmentShader);
-  GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(context, program);
+  GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(m_context, program);
 
-  context.setNear(1);
+  m_context.setNear(1);
 
   GFX::mat4 scale = GFX::scaleMatrix(1.0);
 
@@ -210,62 +211,63 @@ void GfxWidget::render2()
 
   std::cout << "transform matrix:" << std::endl << vertexShader.transform << std::endl;
 
-  context.zBuffer().clear(std::numeric_limits<double>::max());
-  //context.disable(Context::GFX_ZBUFFER);
+  m_context.zBuffer().clear(std::numeric_limits<double>::max());
+  m_context.disable(GFX::Context::GFX_ZBUFFER);
 
   double triangles[] = {
      // front
-    -1,  1, -1, 1, 0, 0, // d
-     1, -1, -1, 0, 0, 1, // b
-    -1, -1, -1, 1, 1, 0, // a
-    -1,  1, -1, 1, 0, 0, // d
-     1,  1, -1, 0, 1, 0, // c
-     1, -1, -1, 0, 0, 1, // b
+    -1,  1, -1, 255,   0,   0, // d
+     1, -1, -1,   0,   0, 255, // b
+    -1, -1, -1, 255, 255,   0, // a
+    -1,  1, -1, 255,   0,   0, // d
+     1,  1, -1,   0, 255,   0, // c
+     1, -1, -1,   0,   0, 255, // b
      // right
-     1,  1, -1, 0, 1, 0, // c
-     1, -1,  1, 1, 0, 0, // f
-     1, -1, -1, 0, 0, 1, // b
-     1,  1, -1, 0, 1, 0, // c
-     1,  1,  1, 1, 1, 0, // g
-     1, -1,  1, 1, 0, 0, // f
+     1,  1, -1,   0, 255,   0, // c
+     1, -1,  1, 255,   0,   0, // f
+     1, -1, -1,   0,   0, 255, // b
+     1,  1, -1,   0, 255,   0, // c
+     1,  1,  1, 255, 255,   0, // g
+     1, -1,  1, 255,   0,   0, // f
      // back
-     1,  1,  1, 1, 1, 0, // g
-    -1, -1,  1, 0, 1, 0, // e
-     1, -1,  1, 1, 0, 0, // f
-     1,  1,  1, 1, 1, 0, // g
-    -1,  1,  1, 0, 0, 1, // h
-    -1, -1,  1, 0, 1, 0, // e
+     1,  1,  1, 255, 255,   0, // g
+    -1, -1,  1,   0, 255,   0, // e
+     1, -1,  1, 255,   0,   0, // f
+     1,  1,  1, 255, 255,   0, // g
+    -1,  1,  1,   0,   0, 255, // h
+    -1, -1,  1,   0, 255,   0, // e
      // left
-    -1,  1,  1, 0, 0, 1, // h
-    -1, -1, -1, 1, 1, 0, // a
-    -1, -1,  1, 0, 1, 0, // e
-    -1,  1,  1, 0, 0, 1, // h
-    -1,  1, -1, 1, 0, 0, // d
-    -1, -1, -1, 1, 1, 0, // a
+    -1,  1,  1,   0,   0, 255, // h
+    -1, -1, -1, 255, 255,   0, // a
+    -1, -1,  1,   0, 255,   0, // e
+    -1,  1,  1,   0,   0, 255, // h
+    -1,  1, -1, 255,   0,   0, // d
+    -1, -1, -1, 255, 255,   0, // a
      // top
-    -1,  1,  1, 0, 0, 1, // h
-     1,  1, -1, 0, 1, 0, // c
-    -1,  1, -1, 1, 0, 0, // d
-    -1,  1,  1, 0, 0, 1, // h
-     1,  1,  1, 1, 1, 0, // g
-     1,  1, -1, 0, 1, 0, // c
+    -1,  1,  1,   0,   0, 255, // h
+     1,  1, -1,   0, 255,   0, // c
+    -1,  1, -1, 255,   0,   0, // d
+    -1,  1,  1,   0,   0, 255, // h
+     1,  1,  1, 255, 255,   0, // g
+     1,  1, -1,   0, 255,   0, // c
      // bottom
-    -1, -1, -1, 1, 1, 0, // a
-     1, -1,  1, 1, 0, 0, // f
-    -1, -1,  1, 0, 1, 0, // e
-    -1, -1, -1, 1, 1, 0, // a
-     1, -1, -1, 0, 0, 1, // b
-     1, -1,  1, 1, 0, 0, // f
+    -1, -1, -1, 255, 255,   0, // a
+     1, -1,  1, 255,   0,   0, // f
+    -1, -1,  1,   0, 255,   0, // e
+    -1, -1, -1, 255, 255,   0, // a
+     1, -1, -1,   0,   0, 255, // b
+     1, -1,  1, 255,   0,   0, // f
   };
 
 
   renderer.drawTriangles(triangles, 36 * 6, 6);
 
 
-  for (int i = 0; i < context.width(); ++i)
-    for (int j = 0; j < context.height(); ++j) {
-      const GFX::Color &color = context.colorBuffer()(i, j);
-      m_image.setPixel(i, context.height() - j - 1, QColor(255 * color.r, 255 * color.g, 255 * color.b).rgb());
+  for (int i = 0; i < m_context.width(); ++i)
+    for (int j = 0; j < m_context.height(); ++j) {
+      const GFX::Color &color = m_context.colorBuffer()(i, j);
+      //m_image.setPixel(i, m_context.height() - j - 1, QColor(color.r, color.g, color.b).rgb());
+      m_image.setPixel(i, m_context.height() - j - 1, color.toARGB());
     }
   
   QPainter painter(this);
