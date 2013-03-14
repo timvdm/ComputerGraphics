@@ -193,7 +193,7 @@ namespace GFX {
     double ys = y * s;
     double zs = z * s;
 
-    mat4 m;
+    mat4 m(mat4::Identity());
 
     m(0, 0) = x * x * (1.0 - c) + c;
     m(0, 1) = x * y * (1.0 - c) - zs;
