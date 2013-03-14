@@ -5,6 +5,7 @@
 #include <libgfx/transform.h>
 
 
+
 GfxWidget::GfxWidget(QWidget *parent) : QLabel(parent), m_image(800, 600, QImage::Format_RGB32),
     m_context(800, 600), m_eye(GFX::vec3(0, 0, -1)), m_dragging(false)
 {
@@ -118,7 +119,10 @@ double lines[] = {
 
 void GfxWidget::render()
 {
-  render1();
+  m_fps.startRender();
+  render2();
+  m_fps.stopRender();
+  qDebug() << "FPS: " << m_fps.fps();
 }
 
 void GfxWidget::render1()
@@ -146,16 +150,9 @@ void GfxWidget::render1()
   GFX::mat4 project = GFX::orthoMatrix(-1, 1, -1, 1, 1.5, 20);
   //GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
 
-  /*
-  project.transpose();
-  view.transpose();
-  trans1.transpose();
-  trans2.transpose();
-  rotateX.transpose();
-  rotateY.transpose();
-  */
+  std::cout << "rotateX:" << std::endl << rotateX << std::endl;
 
-  vertexShader.transform = project * view * trans1 * rotateY * rotateX * trans2;
+  vertexShader.transform = project * view * trans1 * rotateX * rotateY; 
 
 
   std::cout << "transform matrix:" << std::endl << vertexShader.transform << std::endl;
@@ -172,7 +169,7 @@ void GfxWidget::render1()
                           0.5, -0.3, -0.5, 0, 1, 1,
                           0.0, -0.3,  0.5, 0, 1, 0 };
 
-  //renderer.drawTriangles(triangles, 36, 6);
+  renderer.drawTriangles(triangles, 36, 6);
 
 
   for (int i = 0; i < context.width(); ++i)
@@ -199,16 +196,16 @@ void GfxWidget::render2()
 
   GFX::mat4 scale = GFX::scaleMatrix(1.0);
 
-  GFX::mat4 trans1 = GFX::translationMatrix(0, 0, 10);
-  GFX::mat4 trans2 = GFX::translationMatrix(0, 0, 0);
+  GFX::mat4 trans1 = GFX::translationMatrix(0, 0, 5);
+  GFX::mat4 trans2 = GFX::translationMatrix(0, 0, 5);
  
   GFX::mat4 rotateX = GFX::xRotationMatrix(angleY);
   GFX::mat4 rotateY = GFX::yRotationMatrix(angleX);
 
   GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
-  GFX::mat4 modelview = GFX::lookAtMatrix(0, 0, 5, 0, 0, 0, 0, 1, 0);
+  GFX::mat4 view = GFX::lookAtMatrix(0, 0, 5, 0, 0, 0, 0, 1, 0);
 
-  vertexShader.transform = trans1 * rotateX * rotateY * trans2 * modelview * project;
+  vertexShader.transform = project * view * rotateX * rotateY; 
 
 
   std::cout << "transform matrix:" << std::endl << vertexShader.transform << std::endl;
@@ -262,7 +259,7 @@ void GfxWidget::render2()
   };
 
 
-  renderer.drawTriangles(triangles, 36, 6);
+  renderer.drawTriangles(triangles, 36 * 6, 6);
 
 
   for (int i = 0; i < context.width(); ++i)

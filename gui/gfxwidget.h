@@ -5,6 +5,7 @@
 
 #include <libgfx/context.h>
 #include <libgfx/spherecoord.h>
+#include <libgfx/fps.h>
 
 class GfxWidget : public QLabel
 {
@@ -30,6 +31,7 @@ class GfxWidget : public QLabel
     GFX::Context m_context;
     GFX::SphereCoord m_eye;
     GFX::Point2D m_mousePos;
+    GFX::FramesPerSecond m_fps;
     bool m_dragging;
     double angleX;
     double angleY;

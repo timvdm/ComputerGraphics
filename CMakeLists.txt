@@ -37,3 +37,5 @@ add_executable(engine ${cg_SRCS})
 target_link_libraries(engine libgfx)
 
 add_subdirectory(gui)
+
+add_subdirectory(OpenGL)
