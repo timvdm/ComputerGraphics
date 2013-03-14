@@ -132,16 +132,30 @@ void GfxWidget::render1()
 
   context.setNear(1);
 
-  GFX::mat4 trans1 = GFX::translationMatrix(0, 0, 10);
-  GFX::mat4 trans2 = GFX::translationMatrix(0, 0, -10);
+  GFX::mat4 trans1 = GFX::translationMatrix(0, 0, 5);
+  GFX::mat4 trans2 = GFX::translationMatrix(0, 0, -5);
  
-  GFX::mat4 rotateX = GFX::xRotationMatrix(angleY);
-  GFX::mat4 rotateY = GFX::yRotationMatrix(angleX);
+  //GFX::mat4 rotateX = GFX::xRotationMatrix(angleY);
+  //GFX::mat4 rotateY = GFX::yRotationMatrix(angleX);
 
-  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
-  GFX::mat4 modelview = GFX::lookAtMatrix(0, 0, 5, 0, 0, 0, 0, 1, 0);
+  GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
+  GFX::mat4 rotateY = GFX::rotationMatrix(angleY, 1, 0, 0);
 
-  vertexShader.transform = trans1 * rotateX * rotateY * trans2 * modelview * project;
+  GFX::mat4 view = GFX::lookAtMatrix(0, 0, 5, 0, 0, 0, 0, 1, 0);
+  
+  GFX::mat4 project = GFX::orthoMatrix(-1, 1, -1, 1, 1.5, 20);
+  //GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
+
+  /*
+  project.transpose();
+  view.transpose();
+  trans1.transpose();
+  trans2.transpose();
+  rotateX.transpose();
+  rotateY.transpose();
+  */
+
+  vertexShader.transform = project * view * trans1 * rotateY * rotateX * trans2;
 
 
   std::cout << "transform matrix:" << std::endl << vertexShader.transform << std::endl;

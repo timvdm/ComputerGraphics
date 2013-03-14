@@ -160,7 +160,7 @@ namespace GFX {
         // perspective divide
         A /= A.w();
         B /= B.w();
-        
+
         std::cout << "    NDC:       " << print(A) << " -> " << print(B) << std::endl;
 
 
