@@ -1,13 +1,13 @@
 #include "gfxwidget.h"
 
 #include <libgfx/program.h>
-#include <libgfx/renderer.h>
+#include <libgfx/render3d.h>
 #include <libgfx/transform.h>
 
 
 
 GfxWidget::GfxWidget(QWidget *parent) : QLabel(parent), m_image(800, 600, QImage::Format_RGB32),
-    m_context(800, 600), m_eye(GFX::vec3(0, 0, -1)), m_dragging(false)
+    m_context(800, 600), m_eye(GFX::vec3(0, 0, -1)), m_dragging(false), m_eyeZ(5.0)
 {
   angleX = angleY = 0.0;
 }
@@ -24,8 +24,8 @@ void GfxWidget::mouseMoveEvent(QMouseEvent *event)
   //m_eye.theta += dy * 1e-3;
   //m_eye.phi += dx * 1e-3;
   
-  angleX += dx * 1e-3;
-  angleY += dy * 1e-3;
+  angleX += dx * 5e-3;
+  angleY += dy * 5e-3;
 
   update();
 
@@ -51,9 +51,16 @@ void GfxWidget::mouseReleaseEvent(QMouseEvent *event)
   //m_eye.theta += dy * 1e-3;
   //m_eye.phi += dx * 1e-3;
   
-  angleX += dx * 1e-3;
-  angleY += dy * 1e-3;
+  angleX += dx * 5e-3;
+  angleY += dy * 5e-3;
 
+  update();
+}
+    
+void GfxWidget::wheelEvent(QWheelEvent *event)
+{
+  qDebug() << "delta = " << event->delta();
+  m_eyeZ -= 0.001 * event->delta();
   update();
 }
     
@@ -146,14 +153,14 @@ void GfxWidget::render1()
   GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
   GFX::mat4 rotateY = GFX::rotationMatrix(angleY, 1, 0, 0);
 
-  GFX::mat4 view = GFX::lookAtMatrix(0, 0, 5, 0, 0, 0, 0, 1, 0);
+  GFX::mat4 view = GFX::lookAtMatrix(0, 0, m_eyeZ, 0, 0, 0, 0, 1, 0);
   
-  GFX::mat4 project = GFX::orthoMatrix(-1, 1, -1, 1, 1.5, 20);
-  //GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
+  //GFX::mat4 project = GFX::orthoMatrix(-1, 1, -1, 1, 1.5, 20);
+  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
 
   std::cout << "rotateX:" << std::endl << rotateX << std::endl;
 
-  vertexShader.transform = project * view * trans1 * rotateX * rotateY; 
+  vertexShader.transform = project * view * rotateX * rotateY; 
 
 
   std::cout << "transform matrix:" << std::endl << vertexShader.transform << std::endl;

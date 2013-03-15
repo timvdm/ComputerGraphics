@@ -2,6 +2,7 @@
 #define GFX_RENDER2D_H
 
 #include "color.h"
+#include "utility.h"
 
 #include <cmath>
 
@@ -14,50 +15,6 @@ namespace GFX {
       Render2D(CanvasType &canvas) : m_canvas(canvas)
       {
       }
-
-      /*
-      void drawLine(unsigned int x0, unsigned int y0, unsigned int x1, unsigned int y1, const Color &color)
-      {
-        if (x0 == x1) {
-          for (unsigned int y = std::min(y0, y1); y <= std::max(y0, y1); ++y)
-            m_canvas.setPixel(x0, y, color);
-          return;
-        }
-        
-        if (y0 == y1) {
-          for (unsigned int x = std::min(x0, x1); x <= std::max(x0, x1); ++x)
-            m_canvas.setPixel(x, y0, color);
-          return;
-        }
-
-        if (x0 > x1) {
-          std::swap(x0, x1);
-          std::swap(y0, y1);
-        }
-
-        int dx = x1 - x0;
-        int dy = y1 - y0;
-        int d = 2 * dy - dx;
-        int incrE = 2 * dy;
-        int incrNE = 2 * (dy - dx);
-        int x = x0;
-        int y = y0;
-
-        m_canvas.setPixel(x, y, color);
-
-        while (x < x1) {
-          if (d <= 0) {
-            d += incrE;
-            ++x;
-          } else {
-            d += incrNE;
-            ++x;
-            ++y;
-          }
-          m_canvas.setPixel(x, y, color);
-        }
-      }
-      */
 
       void drawLine(unsigned int x0, unsigned int y0, unsigned int x1, unsigned int y1, const Color &color)
       {
@@ -118,43 +75,10 @@ namespace GFX {
         }
       }
 
-      void drawEllipse(unsigned int cx, unsigned int cy, unsigned int a, unsigned int b, const Color &color)
+      void drawEllipse(unsigned int cx, unsigned int cy, unsigned int rx, unsigned int ry, const Color &color)
       {
-        double Pk = b * b - b * a * a + 0.25 * a * a;
-        int x = 0;
-        int y = b;
-        
-        ellipsePoints(cx, cy, x, y, color);
-
-        while (2 * x * b * b <= 2 * y * a * a) {
-          if (Pk < 0) {
-            x++;
-            Pk = Pk + 2 * x * b * b + 3 * b * b;
-          } else {
-            x++;
-            y--;
-            Pk = Pk + 2 * x * b * b + 3 * b * b - 2 * y * a * a + 2 * a * a;
-          }
-          ellipsePoints(cx, cy, x, y, color);
-        }
-
-        Pk = (x + 0.5) * (x + 0.5) * b * b + (y - 1) * (y - 1) * a * a - a * a * b * b;
-        ellipsePoints(cx, cy, x, y, color);
-        while (y > 0) {
-          if (Pk > 0) {
-            y--;
-            Pk = Pk - 2 * y * a * a + 3 * a * a;
-          } else {
-            x++;
-            y--;
-            Pk = Pk - 2 * y * a * a + 3 * a * a + 2 * x * b * b + 2 * b * b;
-          }
-          ellipsePoints(cx, cy, x, y, color);
-        }
-
-        /*
-        int rx2 = rx * rx;
-        int ry2 = ry * ry;
+        double rx2 = rx * rx;
+        double ry2 = ry * ry;
 
         int x = 0;
         int y = ry;
@@ -164,7 +88,6 @@ namespace GFX {
 
         // region 1: dx < dy
         while (rx2 * (y - 0.5) > ry2 * (x + 1)) {
-          std::cout << "d1 = " << d1 << std::endl;
           if (d1 < 0)
             d1 += ry2 * (2 * x + 3);
           else {
@@ -172,7 +95,6 @@ namespace GFX {
             --y;
           }
           ++x;
-          std::cout << "(" << x << ", " << y << ")" << std::endl;
           ellipsePoints(cx, cy, x, y, color);
         }
 
@@ -187,7 +109,61 @@ namespace GFX {
           --y;
           ellipsePoints(cx, cy, x, y, color);
         }
+      }
+
+      /**
+       * @brief Draw a Bezier curve.
+       *
+       * The curve is drawn from endpoint P0 to endpoint P3 and has control
+       * points P1 and P2.
+       */
+      void drawBezierCurve(unsigned int x0, unsigned int y0, unsigned int x1, unsigned int y1,
+                           unsigned int x2, unsigned int y2, unsigned int x3, unsigned int y3,
+                           const Color &color)
+      {
+        /*
+        if (std::abs(x0 - x3) <= 5 && std::abs(y0 - y3) <= 5) {
+          m_canvas.setPixel(x0, y0, color);
+          return;
+        }
         */
+
+        /*
+        double dist2 = (x3 - x0) * (x3 - x0) + (y3 - y0) * (y3 - y0);
+        std::cout << "dist2 = " << dist2 << std::endl;
+        if (dist2 < 20.0) {
+          drawLine(x0, y0, x3, y3, color);
+          return;
+        }
+        */
+
+        // midpoint P0-P1
+        double xA = (x0 + x1) / 2.0; 
+        double yA = (y0 + y1) / 2.0;
+        // midpoint P2-P3
+        double xB = (x2 + x3) / 2.0; 
+        double yB = (y2 + y3) / 2.0;
+        // midpoint P1-P2
+        double xC = (x1 + x2) / 2.0; 
+        double yC = (y1 + y2) / 2.0;
+        // midpoint A-C
+        double xA1 = (xA + xC) / 2.0; 
+        double yA1 = (yA + yC) / 2.0;
+        // midpoint B-C
+        double xB1 = (xB + xC) / 2.0; 
+        double yB1 = (yB + yC) / 2.0;
+        // midpoint A1-B1
+        double xC1 = (xA1 + xB1) / 2.0; 
+        double yC1 = (yA1 + yB1) / 2.0;
+
+        if (std::abs(x0 - xC1) <= 5 && std::abs(y0 - yC1) <= 5)
+          drawLine(x0, y0, xC1, yC1, color);
+        else
+          drawBezierCurve(x0, y0, xA, yA, xA1, yA1, xC1, yC1, color);
+        if (std::abs(x3 - xC1) <= 5 && std::abs(y3 - yC1) <= 5)
+          drawLine(x3, y3, xC1, yC1, color);
+        else
+          drawBezierCurve(xC1, yC1, xB1, yB1, xB, yB, x3, y3, color);
       }
 
 
@@ -207,9 +183,9 @@ namespace GFX {
       void ellipsePoints(unsigned int cx, unsigned int cy, unsigned int x, unsigned int y, const Color &color)
       {
         m_canvas.setPixel(cx + x, cy + y, color);
-        //m_canvas.setPixel(cx + x, cy - y, color);
-        //m_canvas.setPixel(cx - x, cy + y, color);
-        //m_canvas.setPixel(cx - x, cy - y, color);
+        m_canvas.setPixel(cx + x, cy - y, color);
+        m_canvas.setPixel(cx - x, cy + y, color);
+        m_canvas.setPixel(cx - x, cy - y, color);
       }
 
       CanvasType &m_canvas;

@@ -67,9 +67,25 @@ void test_Render2D_drawEllipse()
   ofs << canvas.image;
 }
 
+void test_Render2D_drawBezierCurve()
+{
+  EasyImageCanvas canvas(500, 500, Color::black());
+  Render2D<EasyImageCanvas> painter(canvas);
+
+  painter.drawBezierCurve(50, 50, 30, 200, 450, 450, 350, 30, Color::green());
+  painter.drawBezierCurve(150, 450, 0, 0, 500, 0, 350, 450, Color::red());
+  
+  painter.drawBezierCurve(0, 0, 0, 250, 250, 250, 250, 250, Color::blue());
+  painter.drawBezierCurve(250, 250, 250, 250, 499, 250, 499, 499, Color::blue());
+
+  std::ofstream ofs("test_Render2D_drawBezierCurve.bmp", std::ios_base::out | std::ios_base::binary);
+  ofs << canvas.image;
+}
+
 int main()
 {
   test_Render2D_drawLine();
   test_Render2D_drawCircle();
   test_Render2D_drawEllipse();
+  test_Render2D_drawBezierCurve();
 }

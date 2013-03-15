@@ -316,11 +316,12 @@ namespace GFX {
         Point2D a = project(A, m_context.near());
         Point2D b = project(B, m_context.near());
         Point2D c = project(C, m_context.near());
-        
+
         screenCoordinates(a);
         screenCoordinates(b);
         screenCoordinates(c);
 
+        
         Point2D G((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0);
         double zG = 1.0 / (3.0 * A.z()) + 1.0 / (3.0 * B.z()) + 1.0 / (3.0 * C.z());
 
@@ -329,8 +330,9 @@ namespace GFX {
         vec3 w = vec3(u.x(), u.y(), u.z()).cross(vec3(v.x(), v.y(), v.z()));
         double k = w.dot(vec3(A.x(), A.y(), A.z()));
 
-        double dzdx = w.x() / (-k);
-        double dzdy = w.y() / (-k);
+        double dzdx = w.x() / -k;
+        double dzdy = w.y() / -k;
+
 
         std::cout << "Triangle: " << a << " -> " << b << " -> " << c << std::endl;
 
@@ -356,27 +358,60 @@ namespace GFX {
         double xL_AB, xL_AC, xL_BC;
         double xR_AB, xR_AC, xR_BC;
         for (int y = minY; y <= maxY; ++y) {
+
           // if the y value is outside the color buffer there is no need to draw it
           if (y < 0 || y >= m_context.height())
             continue;
-
+          
           xL_AB = xL_AC = xL_BC = std::numeric_limits<double>::max();
           xR_AB = xR_AC = xR_BC = std::numeric_limits<double>::min();
 
-          if (intersects(y, a, b))
-            xL_AB = xR_AB = intersection(y, a, b);
-          if (intersects(y, a, c))
-            xL_AC = xR_AC = intersection(y, a, c);
-          if (intersects(y, b, c))
-            xL_BC = xR_BC = intersection(y, b, c);
+          int intersections = 0;
 
+          if (intersects(y, a, b)) {
+            intersections |= 1;
+            xL_AB = xR_AB = intersection(y, a, b);
+          }
+          if (intersects(y, a, c)) {
+            intersections |= 2;
+            xL_AC = xR_AC = intersection(y, a, c);
+          }
+          if (intersects(y, b, c)) {
+            intersections |= 4;
+            xL_BC = xR_BC = intersection(y, b, c);
+          }
+
+          double za, zb;
+          switch (intersections) {
+            case 3:
+              za = A.z() - (A.z() - B.z()) * (a.y - y) / (a.y - b.y);
+              zb = A.z() - (A.z() - C.z()) * (a.y - y) / (a.y - c.y);
+              //if (b.x > c.x)
+                //std::swap(za, zb);
+              break;
+            case 5:
+              za = B.z() - (B.z() - A.z()) * (b.y - y) / (b.y - a.y);
+              zb = B.z() - (B.z() - C.z()) * (b.y - y) / (b.y - c.y);
+              //if (a.x > c.x)
+                //std::swap(za, zb);
+              break;
+            case 6:
+              za = C.z() - (C.z() - A.z()) * (c.y - y) / (c.y - a.y);
+              zb = C.z() - (C.z() - B.z()) * (c.y - y) / (c.y - b.y);
+              //if (b.x > c.x)
+                //std::swap(za, zb);
+              break;
+          }
+
+          // move to switch...
           int xL = nearest(std::min(xL_AB, std::min(xL_AC, xL_BC)) + 0.5);
           int xR = nearest(std::max(xR_AB, std::max(xL_AC, xL_BC)) - 0.5);
 
           for (int x = xL; x <= xR; ++x) {
             callInterpolationFunction(varyingA, varyingB, varyingC, a, b, c, Point2D(x, y), varying);
             Color color = m_program.fragmentShader().exec(varying);
-            double z = 1.0001 * zG + (x - G.x) * dzdx + (y - G.y) * dzdy;
+            //double z = 1.0001 * zG + (x - G.x) * dzdx + (y - G.y) * dzdy;
+            double z = zb - (zb - za) * (xR - x) / static_cast<double>(xR - xL);
             m_context.drawPixel(x, y, z, color);
           }
         }

@@ -25,6 +25,7 @@ class GfxWidget : public QLabel
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void wheelEvent(QWheelEvent *event);
 
 
     QImage m_image;
@@ -35,6 +36,7 @@ class GfxWidget : public QLabel
     bool m_dragging;
     double angleX;
     double angleY;
+    double m_eyeZ;
 };
 
 #endif
