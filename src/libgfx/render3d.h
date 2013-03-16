@@ -355,57 +355,59 @@ namespace GFX {
         
         varying_type varying;
 
-        double xL_AB, xL_AC, xL_BC;
-        double xR_AB, xR_AC, xR_BC;
         for (int y = minY; y <= maxY; ++y) {
 
           // if the y value is outside the color buffer there is no need to draw it
           if (y < 0 || y >= m_context.height())
             continue;
           
-          xL_AB = xL_AC = xL_BC = std::numeric_limits<double>::max();
-          xR_AB = xR_AC = xR_BC = std::numeric_limits<double>::min();
-
           int intersections = 0;
 
-          if (intersects(y, a, b)) {
+          if (intersects(y, a, b))
             intersections |= 1;
-            xL_AB = xR_AB = intersection(y, a, b);
-          }
-          if (intersects(y, a, c)) {
+          if (intersects(y, a, c))
             intersections |= 2;
-            xL_AC = xR_AC = intersection(y, a, c);
-          }
-          if (intersects(y, b, c)) {
+          if (intersects(y, b, c))
             intersections |= 4;
-            xL_BC = xR_BC = intersection(y, b, c);
-          }
 
+          int xL, xR;
           double za, zb;
           switch (intersections) {
             case 3:
-              za = A.z() - (A.z() - B.z()) * (a.y - y) / (a.y - b.y);
-              zb = A.z() - (A.z() - C.z()) * (a.y - y) / (a.y - c.y);
-              //if (b.x > c.x)
-                //std::swap(za, zb);
+              // A-B and A-C intersect scanline
+              {
+                double x1 = intersection(y, a, b);
+                double x2 = intersection(y, a, c);
+                xL = nearest(std::min(x1, x2));
+                xR = nearest(std::max(x1, x2));
+                za = A.z() - (A.z() - B.z()) * (a.y - y) / (a.y - b.y);
+                zb = A.z() - (A.z() - C.z()) * (a.y - y) / (a.y - c.y);
+              }
               break;
             case 5:
-              za = B.z() - (B.z() - A.z()) * (b.y - y) / (b.y - a.y);
-              zb = B.z() - (B.z() - C.z()) * (b.y - y) / (b.y - c.y);
-              //if (a.x > c.x)
-                //std::swap(za, zb);
+              // A-B and B-C intersect scanline
+              {
+                double x1 = intersection(y, a, b);
+                double x2 = intersection(y, b, c);
+                xL = nearest(std::min(x1, x2));
+                xR = nearest(std::max(x1, x2));
+                za = B.z() - (B.z() - A.z()) * (b.y - y) / (b.y - a.y);
+                zb = B.z() - (B.z() - C.z()) * (b.y - y) / (b.y - c.y);
+              }
               break;
             case 6:
-              za = C.z() - (C.z() - A.z()) * (c.y - y) / (c.y - a.y);
-              zb = C.z() - (C.z() - B.z()) * (c.y - y) / (c.y - b.y);
-              //if (b.x > c.x)
-                //std::swap(za, zb);
+              // A-C and B-C intersect scanline
+              {
+                double x1 = intersection(y, a, c);
+                double x2 = intersection(y, b, c);
+                xL = nearest(std::min(x1, x2));
+                xR = nearest(std::max(x1, x2));
+                za = C.z() - (C.z() - A.z()) * (c.y - y) / (c.y - a.y);
+                zb = C.z() - (C.z() - B.z()) * (c.y - y) / (c.y - b.y);
+              }
               break;
           }
 
-          // move to switch...
-          int xL = nearest(std::min(xL_AB, std::min(xL_AC, xL_BC)) + 0.5);
-          int xR = nearest(std::max(xR_AB, std::max(xL_AC, xL_BC)) - 0.5);
 
           for (int x = xL; x <= xR; ++x) {
             callInterpolationFunction(varyingA, varyingB, varyingC, a, b, c, Point2D(x, y), varying);
