@@ -6,8 +6,8 @@
 
 
 
-GfxWidget::GfxWidget(QWidget *parent) : QLabel(parent), m_image(800, 600, QImage::Format_RGB32),
-    m_context(800, 600), m_eye(GFX::vec3(0, 0, -1)), m_dragging(false), m_eyeZ(5.0)
+GfxWidget::GfxWidget(QWidget *parent) : QLabel(parent), m_image(500, 500, QImage::Format_RGB32),
+    m_context(500, 500), m_eye(GFX::vec3(0, 0, -1)), m_dragging(false), m_eyeZ(5.0)
 {
   angleX = angleY = 0.0;
 }
@@ -88,39 +88,48 @@ struct SimpleFragmentShader
 {
   typedef std::tuple<GFX::Color> varying_type;
 
-  GFX::Color exec(const varying_type &varying)
+  GFX::Color exec(const varying_type &varying, bool backFace = false)
   {
+    if (backFace)
+      return GFX::Color(200, 200, 200);
     return std::get<0>(varying);
   }
 };
 
 double lines[] = { 
-                   -0.5,  0.5, -0.5, 255,   0,   0,
-                    0.5,  0.5, -0.5,   0, 255,   0,
-                    0.5,  0.5, -0.5,   0, 255,   0,
-                    0.5, -0.5, -0.5,   0,   0, 255,
-                    0.5, -0.5, -0.5,   0,   0, 255,
-                   -0.5, -0.5, -0.5, 255, 255,   0,
-                   -0.5, -0.5, -0.5, 255, 255,   0,
-                   -0.5,  0.5, -0.5, 255,   0,   0,
+                   -0.5,  0.5, -0.5, 255, 255, 255,
+                    0.5,  0.5, -0.5, 255, 255, 255,
+                    0.5,  0.5, -0.5, 255, 255, 255,
+                    0.5, -0.5, -0.5, 255, 255, 255,
+                    0.5, -0.5, -0.5, 255, 255, 255,
+                   -0.5, -0.5, -0.5, 255, 255, 255,
+                   -0.5, -0.5, -0.5, 255, 255, 255,
+                   -0.5,  0.5, -0.5, 255, 255, 255,
 
-                   -0.5,  0.5,  0.5, 255,   0,   0,
-                    0.5,  0.5,  0.5,   0, 255,   0,
-                    0.5,  0.5,  0.5,   0, 255,   0,
-                    0.5, -0.5,  0.5,   0,   0, 255,
-                    0.5, -0.5,  0.5,   0,   0, 255,
-                   -0.5, -0.5,  0.5, 255, 255,   0,
-                   -0.5, -0.5,  0.5, 255, 255,   0,
-                   -0.5,  0.5,  0.5, 255,   0,   0,
+                   -0.5,  0.5,  0.5, 255, 255, 255,
+                    0.5,  0.5,  0.5, 255, 255, 255,
+                    0.5,  0.5,  0.5, 255, 255, 255,
+                    0.5, -0.5,  0.5, 255, 255, 255,
+                    0.5, -0.5,  0.5, 255, 255, 255,
+                   -0.5, -0.5,  0.5, 255, 255, 255,
+                   -0.5, -0.5,  0.5, 255, 255, 255,
+                   -0.5,  0.5,  0.5, 255, 255, 255,
 
-                   -0.5,  0.5, -0.5, 255,   0,   0,
-                   -0.5,  0.5,  0.5, 255,   0,   0,
-                    0.5,  0.5, -0.5,   0, 255,   0,
-                    0.5,  0.5,  0.5,   0, 255,   0,
-                    0.5, -0.5, -0.5,   0,   0, 255,
-                    0.5, -0.5,  0.5,   0,   0, 255,
-                   -0.5, -0.5, -0.5, 255, 255,   0,
-                   -0.5, -0.5,  0.5, 255, 255,   0
+                   -0.5,  0.5, -0.5, 255, 255, 255,
+                   -0.5,  0.5,  0.5, 255, 255, 255,
+                    0.5,  0.5, -0.5, 255, 255, 255,
+                    0.5,  0.5,  0.5, 255, 255, 255,
+                    0.5, -0.5, -0.5, 255, 255, 255,
+                    0.5, -0.5,  0.5, 255, 255, 255,
+                   -0.5, -0.5, -0.5, 255, 255, 255,
+                   -0.5, -0.5,  0.5, 255, 255, 255,
+
+                   -0.8, -0.8, -0.8, 255,   0,   0,
+                   -0.6, -0.8, -0.8, 255,   0,   0,
+                   -0.8, -0.8, -0.8,   0, 255,   0,
+                   -0.8, -0.6, -0.8,   0, 255,   0,
+                   -0.8, -0.8, -0.8,   0,   0, 255,
+                   -0.8, -0.8, -0.6,   0,   0, 255,
 };
 
 
@@ -128,7 +137,7 @@ void GfxWidget::render()
 {
   m_fps.startRender();
   m_context.colorBuffer().clear(GFX::Color::black());
-  render1();
+  render2();
   m_fps.stopRender();
   qDebug() << "FPS: " << m_fps.fps();
 }
@@ -142,21 +151,13 @@ void GfxWidget::render1()
   GFX::Program<SimpleVertexShader, SimpleFragmentShader> program(vertexShader, fragmentShader);
   GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(context, program);
 
-  context.setNear(1);
-
-  GFX::mat4 trans1 = GFX::translationMatrix(0, 0, 5);
-  GFX::mat4 trans2 = GFX::translationMatrix(0, 0, -5);
- 
-  //GFX::mat4 rotateX = GFX::xRotationMatrix(angleY);
-  //GFX::mat4 rotateY = GFX::yRotationMatrix(angleX);
-
   GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
   GFX::mat4 rotateY = GFX::rotationMatrix(angleY, 1, 0, 0);
 
   GFX::mat4 view = GFX::lookAtMatrix(0, 0, m_eyeZ, 0, 0, 0, 0, 1, 0);
   
-  //GFX::mat4 project = GFX::orthoMatrix(-1, 1, -1, 1, 1.5, 20);
-  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
+  //GFX::mat4 project = GFX::orthoMatrix(-1, 1, -1, 1, 1.0, 20);
+  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.0, 20);
 
   std::cout << "rotateX:" << std::endl << rotateX << std::endl;
 
@@ -166,18 +167,38 @@ void GfxWidget::render1()
   std::cout << "transform matrix:" << std::endl << vertexShader.transform << std::endl;
 
   context.zBuffer().clear(std::numeric_limits<double>::max());
-  //context.disable(Context::GFX_ZBUFFER);
+  //context.disable(GFX::Context::GFX_ZBUFFER);
 
-  renderer.drawLines(lines, 6 * 2 * 12, 6);
+  renderer.drawLines(lines, 6 * 2 * 15, 6);
 
-  double triangles[] = { -0.5, -0.5,  0.3, 255,   0,   0,
-                          0.5, -0.5,  0.3,   0, 255,   0,
-                          0.0,  0.5,  0.3,   0,   0, 255,
-                         -0.5, -0.3, -0.5,   0,   0, 255,
-                          0.5, -0.3, -0.5,   0, 255, 255,
-                          0.0, -0.3,  0.5,   0, 255,   0 };
+  double triangles[] = {
+    -0.5, -0.5,  0.0, 255,   0,   0,
+     0.5,  0.5,  0.0, 255,   0,   0,
+     0.5, -0.5,  0.0, 255,   0,   0,
 
-  renderer.drawTriangles(triangles, 36, 6);
+    -0.5, -0.5,  0.0, 255,   0,   0,
+    -0.5,  0.5,  0.0, 255,   0,   0,
+     0.5,  0.5,  0.0, 255,   0,   0,
+
+    -0.5,  0.0, -0.5,   0, 255,   0,
+     0.5,  0.0,  0.5,   0, 255,   0,
+     0.5,  0.0, -0.5,   0, 255,   0,
+
+    -0.5,  0.0, -0.5,   0, 255,   0,
+    -0.5,  0.0,  0.5,   0, 255,   0,
+     0.5,  0.0,  0.5,   0, 255,   0,
+
+     0.0, -0.5, -0.5,    0,   0, 255,
+     0.0,  0.5, -0.5,    0,   0, 255,
+     0.0,  0.5,  0.5,    0,   0, 255,
+
+     0.0, -0.5, -0.5,    0,   0, 255,
+     0.0,  0.5,  0.5,    0,   0, 255,
+     0.0, -0.5,  0.5,    0,   0, 255,
+
+  };
+
+  renderer.drawTriangles(triangles, 3 * 36, 6);
 
 
   for (int i = 0; i < context.width(); ++i)
@@ -200,18 +221,16 @@ void GfxWidget::render2()
   GFX::Program<SimpleVertexShader, SimpleFragmentShader> program(vertexShader, fragmentShader);
   GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(m_context, program);
 
-  m_context.setNear(1);
-
   GFX::mat4 scale = GFX::scaleMatrix(1.0);
 
-  GFX::mat4 trans1 = GFX::translationMatrix(0, 0, 5);
-  GFX::mat4 trans2 = GFX::translationMatrix(0, 0, 5);
- 
-  GFX::mat4 rotateX = GFX::xRotationMatrix(angleY);
-  GFX::mat4 rotateY = GFX::yRotationMatrix(angleX);
+  //GFX::mat4 rotateX = GFX::xRotationMatrix(angleY);
+  //GFX::mat4 rotateY = GFX::yRotationMatrix(angleX);
+  GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
+  GFX::mat4 rotateY = GFX::rotationMatrix(angleY, 1, 0, 0);
 
-  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
-  GFX::mat4 view = GFX::lookAtMatrix(0, 0, 5, 0, 0, 0, 0, 1, 0);
+
+  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.0, 10);
+  GFX::mat4 view = GFX::lookAtMatrix(0, 0, m_eyeZ, 0, 0, 0, 0, 1, 0);
 
   vertexShader.transform = project * view * rotateX * rotateY; 
 
@@ -219,51 +238,51 @@ void GfxWidget::render2()
   std::cout << "transform matrix:" << std::endl << vertexShader.transform << std::endl;
 
   m_context.zBuffer().clear(std::numeric_limits<double>::max());
-  m_context.disable(GFX::Context::GFX_ZBUFFER);
+  //m_context.disable(GFX::Context::GFX_ZBUFFER);
 
   double triangles[] = {
      // front
     -1,  1, -1, 255,   0,   0, // d
-     1, -1, -1,   0,   0, 255, // b
-    -1, -1, -1, 255, 255,   0, // a
+     1, -1, -1,   0, 255,   0, // b
+    -1, -1, -1,   0,   0, 255, // a
     -1,  1, -1, 255,   0,   0, // d
-     1,  1, -1,   0, 255,   0, // c
-     1, -1, -1,   0,   0, 255, // b
+     1,  1, -1, 255, 255,   0, // c
+     1, -1, -1,   0, 255,   0, // b
      // right
-     1,  1, -1,   0, 255,   0, // c
+     1,  1, -1, 255,   0,   0, // c
      1, -1,  1, 255,   0,   0, // f
-     1, -1, -1,   0,   0, 255, // b
-     1,  1, -1,   0, 255,   0, // c
-     1,  1,  1, 255, 255,   0, // g
+     1, -1, -1, 255,   0,   0, // b
+     1,  1, -1, 255,   0,   0, // c
+     1,  1,  1, 255,   0,   0, // g
      1, -1,  1, 255,   0,   0, // f
      // back
-     1,  1,  1, 255, 255,   0, // g
+     1,  1,  1,   0, 255,   0, // g
     -1, -1,  1,   0, 255,   0, // e
-     1, -1,  1, 255,   0,   0, // f
-     1,  1,  1, 255, 255,   0, // g
-    -1,  1,  1,   0,   0, 255, // h
+     1, -1,  1,   0, 255,   0, // f
+     1,  1,  1,   0, 255,   0, // g
+    -1,  1,  1,   0, 255,   0, // h
     -1, -1,  1,   0, 255,   0, // e
      // left
     -1,  1,  1,   0,   0, 255, // h
-    -1, -1, -1, 255, 255,   0, // a
-    -1, -1,  1,   0, 255,   0, // e
+    -1, -1, -1,   0,   0, 255, // a
+    -1, -1,  1,   0,   0, 255, // e
     -1,  1,  1,   0,   0, 255, // h
-    -1,  1, -1, 255,   0,   0, // d
-    -1, -1, -1, 255, 255,   0, // a
+    -1,  1, -1,   0,   0, 255, // d
+    -1, -1, -1,   0,   0, 255, // a
      // top
-    -1,  1,  1,   0,   0, 255, // h
-     1,  1, -1,   0, 255,   0, // c
-    -1,  1, -1, 255,   0,   0, // d
-    -1,  1,  1,   0,   0, 255, // h
+    -1,  1,  1, 255, 255,   0, // h
+     1,  1, -1, 255, 255,   0, // c
+    -1,  1, -1, 255, 255,   0, // d
+    -1,  1,  1, 255, 255,   0, // h
      1,  1,  1, 255, 255,   0, // g
-     1,  1, -1,   0, 255,   0, // c
+     1,  1, -1, 255, 255,   0, // c
      // bottom
-    -1, -1, -1, 255, 255,   0, // a
-     1, -1,  1, 255,   0,   0, // f
-    -1, -1,  1,   0, 255,   0, // e
-    -1, -1, -1, 255, 255,   0, // a
-     1, -1, -1,   0,   0, 255, // b
-     1, -1,  1, 255,   0,   0, // f
+    -1, -1, -1, 255,   0, 255, // a
+     1, -1,  1, 255,   0, 255, // f
+    -1, -1,  1, 255,   0, 255, // e
+    -1, -1, -1, 255,   0, 255, // a
+     1, -1, -1, 255,   0, 255, // b
+     1, -1,  1, 255,   0, 255, // f
   };
 
 
@@ -281,3 +300,42 @@ void GfxWidget::render2()
   painter.drawImage(0, 0, m_image);
 
 }
+
+
+
+
+
+
+
+
+void GfxWidget::renderCube()
+{
+  GFX::Context context(pixmap()->width(), pixmap()->height());
+
+  SimpleVertexShader vertexShader;
+  SimpleFragmentShader fragmentShader;
+  GFX::Program<SimpleVertexShader, SimpleFragmentShader> program(vertexShader, fragmentShader);
+  GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(context, program);
+
+  GFX::mat4 view = GFX::lookAtMatrix(0, 0, 5, 0, 0, 0, 0, 1, 0);
+  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
+
+  GFX::mat4 scale = GFX::scaleMatrix(1, 2, 1);
+
+  vertexShader.transform = project * view * scale; 
+
+  context.zBuffer().clear(std::numeric_limits<double>::max());
+
+  renderer.drawLines(lines, 6 * 2 * 15, 6);
+
+  for (int i = 0; i < context.width(); ++i)
+    for (int j = 0; j < context.height(); ++j) {
+      const GFX::Color &color = context.colorBuffer()(i, j);
+      m_image.setPixel(i, m_context.height() - j - 1, color.toARGB());
+    }
+  
+  QPainter painter(this);
+  painter.drawImage(0, 0, m_image);
+
+}
+

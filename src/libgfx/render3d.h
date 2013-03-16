@@ -18,30 +18,37 @@ namespace GFX {
    *
    * @return The interpolated color.
    */
-  double triangleArea(const Point2D &A, const Point2D &B, const Point2D &C)
+  double triangleArea(const Point2D &A, const vec4 &B, const vec4 &C)
   {
     // shoelace or surveyor's formula
-    return 0.5 * std::abs((A.x - C.x) * (B.y - A.y) - (A.x - B.x) * (C.y - A.y));
+    return 0.5 * std::abs((A.x - C.x()) * (B.y() - A.y) - (A.x - B.x()) * (C.y() - A.y));
   }
 
-  Color interpolateVarying(const Color &cA, const Color &cB, const Point2D &A, const Point2D &B, const Point2D &I)
+  double distance(double x0, double y0, double x1, double y1)
   {
-    double a = Point2D::distance(B, I) / Point2D::distance(A, B);
+    double dx = x1 - x0;
+    double dy = y1 - y0;
+    return std::sqrt(dx * dx + dy * dy);
+  }
+
+  Color interpolateVarying(const Color &cA, const Color &cB, const vec4 &A, const vec4 &B, const Point2D &I)
+  {
+    double a = distance(B.x(), B.y(), I.x, I.y) / distance(A.x(), A.y(), B.x(), B.y());
     double b = 1.0 - a;
     return Color(cA.r * a + cB.r * b, cA.g * a + cB.g * b, cA.b * a + cB.b * b);
   }
 
   template<int I = 0, typename... Tp>
   typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
-      const std::tuple<Tp...>&, const std::tuple<Tp...>&, const Point2D &,
-      const Point2D &, const Point2D &, std::tuple<Tp...>&)
+      const std::tuple<Tp...>&, const std::tuple<Tp...>&, const vec4 &,
+      const vec4 &, const Point2D &, std::tuple<Tp...>&)
   {
   }
 
   template<int I = 0, typename... Tp>
   typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
       const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB, 
-      const Point2D &A, const Point2D &B, const Point2D &C, std::tuple<Tp...> &varying)
+      const vec4 &A, const vec4 &B, const Point2D &C, std::tuple<Tp...> &varying)
   {
     std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), A, B, C);
     callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, A, B, C, varying);
@@ -65,9 +72,9 @@ namespace GFX {
    * @return The interpolated color.
    */
   Color interpolateVarying(const Color &cA, const Color &cB, const Color &cC,
-      const Point2D &A, const Point2D &B, const Point2D &C, const Point2D &I)
+      const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I)
   {
-    double total = triangleArea(A, B, C);
+    double total = triangleArea(Point2D(A.x(), A.y()), B, C);
     double a = triangleArea(I, B, C) / total;
     double b = triangleArea(I, A, C) / total;
     double c = triangleArea(I, A, B) / total;
@@ -79,14 +86,14 @@ namespace GFX {
   template<int I = 0, typename... Tp>
   typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
       const std::tuple<Tp...>&, const std::tuple<Tp...>&, const std::tuple<Tp...>&,
-      const Point2D&, const Point2D&, const Point2D&, const Point2D&, std::tuple<Tp...>&)
+      const vec4&, const vec4&, const vec4&, const Point2D&, std::tuple<Tp...>&)
   {
   }
 
   template<int I = 0, typename... Tp>
   typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
       const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB, const std::tuple<Tp...> &varyingC,
-      const Point2D &A, const Point2D &B, const Point2D &C, const Point2D &E, std::tuple<Tp...> &varying)
+      const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &E, std::tuple<Tp...> &varying)
   {
     std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), std::get<I>(varyingC), A, B, C, E);
     callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, varyingC, A, B, C, E, varying);
@@ -163,38 +170,19 @@ namespace GFX {
 
         std::cout << "    NDC:       " << print(A) << " -> " << print(B) << std::endl;
 
+        screenCoordinates(A);
+        screenCoordinates(B);
 
-        //screenCoordinates(A);
-        //screenCoordinates(B);
-        //std::cout << "    screen:    " << A << " -> " << B << std::endl;
-
-
-        // project eye-coordinates to 2D surface
-        Point2D a = project(A, m_context.near());
-        Point2D b = project(B, m_context.near());
-
-        std::cout << "    projected: " << a << " -> " << b << std::endl;
-
-        screenCoordinates(a);
-        screenCoordinates(b);
-        std::cout << "    screen:    " << a << " -> " << b << std::endl;
+        std::cout << "    screen:    " << print(A) << " -> " << print(B) << std::endl;
 
         //std::cout << "    Color: " << std::get<0>(varyingA) << " -> " << std::get<0>(varyingB) << std::endl;
 
-        //a = Point2D(-a.x, -a.y);
-        //b = Point2D(-b.x, -b.y);
-
-        // primitive assembly
-        //if ((a.x < 0 || a.x >= m_context.width() || a.y < 0 || a.y >= m_context.height()) && 
-        //    (b.x < 0 || b.x >= m_context.width() || b.y < 0 || b.y >= m_context.height()))
-        //  return;
-          
         varying_type varying;
 
-        if (a.x == b.x) {
-          // special case for a.x == b.x
-          int minY = nearest(std::min(a.y, b.y));
-          int maxY = nearest(std::max(a.y, b.y));
+        if (A.x() == B.x()) {
+          // special case for A.x() == B.x()
+          int minY = nearest(std::min(A.y(), B.y()));
+          int maxY = nearest(std::max(A.y(), B.y()));
           int numY = maxY - minY + 1;
 
           if (minY < 0)
@@ -203,17 +191,17 @@ namespace GFX {
             maxY = m_context.height() - 1;
 
           for (int i = minY; i <= maxY; ++i) {
-            callInterpolationFunction(varyingA, varyingB, a, b, Point2D(a.x, i), varying);
+            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(A.x(), i), varying);
             Color color = m_program.fragmentShader().exec(varying);
-            m_context.drawPixel(a.x, i, interpolateLineZ(A.z(), B.z(), i, numY), color);
+            m_context.drawPixel(A.x(), i, interpolateLineZ(A.z(), B.z(), i, numY), color);
           }
           return;
         } 
         
-        if (a.y == b.y) {
-          // special case for a.y == b.y
-          int minX = nearest(std::min(a.x, b.x));
-          int maxX = nearest(std::max(a.x, b.x));
+        if (A.y() == B.y()) {
+          // special case for A.y() == B.y()
+          int minX = nearest(std::min(A.x(), B.x()));
+          int maxX = nearest(std::max(A.x(), B.x()));
           int numX = maxX - minX + 1;
 
           if (minX < 0)
@@ -222,56 +210,56 @@ namespace GFX {
             maxX = m_context.width() - 1;
 
           for (int i = minX; i <= maxX; ++i) {
-            callInterpolationFunction(varyingA, varyingB, a, b, Point2D(i, a.y), varying);
+            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(i, A.y()), varying);
             Color color = m_program.fragmentShader().exec(varying);
-            m_context.drawPixel(i, a.y, interpolateLineZ(A.z(), B.z(), i, numX), color);
+            m_context.drawPixel(i, A.y(), interpolateLineZ(A.z(), B.z(), i, numX), color);
           }
           return;
         }
         
-        if (a.x > b.x) {
-          // flip points if b.x > a.x: we want a.x to have the lowest value
-          std::swap(a, b);
+        if (A.x() > B.x()) {
+          // flip points if B.x() > A.x(): we want A.x() to have the lowest value
+          std::swap(A, B);
           std::swap(varyingA, varyingB);
         }
         
-        double m = ((double) b.y - (double) a.y) / ((double) b.x - (double) a.x);
+        double m = ((double) B.y() - (double) A.y()) / ((double) B.x() - (double) A.x());
         if (-1.0 <= m && m <= 1.0) {
-          int num = b.x - a.x + 1;
-          for (int i = 0; i <= (b.x - a.x); ++i) {
-            int x = a.x + i;
-            int y = round(a.y + m * i);
+          int num = B.x() - A.x() + 1;
+          for (int i = 0; i <= (B.x() - A.x()); ++i) {
+            int x = A.x() + i;
+            int y = round(A.y() + m * i);
 
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            callInterpolationFunction(varyingA, varyingB, a, b, Point2D(x, y), varying);
+            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
             Color color = m_program.fragmentShader().exec(varying);
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
         } else if (m > 1.0) {
-          int num = b.y - a.y + 1;
-          for (int i = 0; i <= (b.y - a.y); ++i) {
-            int x = round(a.x + i / m);
-            int y = a.y + i;
+          int num = B.y() - A.y() + 1;
+          for (int i = 0; i <= (B.y() - A.y()); ++i) {
+            int x = round(A.x() + i / m);
+            int y = A.y() + i;
 
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            callInterpolationFunction(varyingA, varyingB, a, b, Point2D(x, y), varying);
+            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
             Color color = m_program.fragmentShader().exec(varying);
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
         } else if (m < -1.0) {
-          int num = a.y - b.y + 1;
-          for (int i = 0; i <= (a.y - b.y); ++i) {
-            int x = round(a.x - i / m);
-            int y = a.y - i;
+          int num = A.y() - B.y() + 1;
+          for (int i = 0; i <= (A.y() - B.y()); ++i) {
+            int x = round(A.x() - i / m);
+            int y = A.y() - i;
 
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            callInterpolationFunction(varyingA, varyingB, a, b, Point2D(x, y), varying);
+            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
             Color color = m_program.fragmentShader().exec(varying);
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
@@ -286,14 +274,14 @@ namespace GFX {
           drawTriangle(attributes + i - stride * 2, attributes + i - stride, attributes + i);
       }
 
-      bool intersects(double y, const Point2D &P, const Point2D &Q)
+      bool intersects(double y, const vec4 &P, const vec4 &Q)
       {
-        return (P.y != Q.y) && ((y - P.y) * (y - Q.y) <= 0.0);
+        return (P.y() != Q.y()) && ((y - P.y()) * (y - Q.y()) <= 0.0);
       }
 
-      double intersection(double y, const Point2D &P, const Point2D &Q)
+      double intersection(double y, const vec4 &P, const vec4 &Q)
       {
-        return Q.x + (P.x - Q.x) * (y - Q.y) / (P.y - Q.y);
+        return Q.x() + (P.x() - Q.x()) * (y - Q.y()) / (P.y() - Q.y());
       }
 
       void drawTriangle(const double *attributesA, const double *attributesB, const double *attributesC)
@@ -311,39 +299,17 @@ namespace GFX {
         A /= A.w();
         B /= B.w();
         C /= C.w();
-
-        // project eye-coordinates to 2D surface
-        Point2D a = project(A, m_context.near());
-        Point2D b = project(B, m_context.near());
-        Point2D c = project(C, m_context.near());
-
-        screenCoordinates(a);
-        screenCoordinates(b);
-        screenCoordinates(c);
-
         
-        Point2D G((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0);
-        double zG = 1.0 / (3.0 * A.z()) + 1.0 / (3.0 * B.z()) + 1.0 / (3.0 * C.z());
+        std::cout << "    NDC:       " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
 
-        vec4 u = B - A;
-        vec4 v = C - A;
-        vec3 w = vec3(u.x(), u.y(), u.z()).cross(vec3(v.x(), v.y(), v.z()));
-        double k = w.dot(vec3(A.x(), A.y(), A.z()));
+        screenCoordinates(A);
+        screenCoordinates(B);
+        screenCoordinates(C);
+        
+        std::cout << "Triangle: " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
 
-        double dzdx = w.x() / -k;
-        double dzdy = w.y() / -k;
-
-
-        std::cout << "Triangle: " << a << " -> " << b << " -> " << c << std::endl;
-
-        // primitive assembly
-        if ((a.x < 0 || a.x >= m_context.width() || a.y < 0 || a.y >= m_context.height()) && 
-            (b.x < 0 || b.x >= m_context.width() || b.y < 0 || b.y >= m_context.height()) &&
-            (c.x < 0 || c.x >= m_context.width() || c.y < 0 || c.y >= m_context.height()))
-          return;
- 
-        int minY = nearest(std::min(a.y, std::min(b.y, c.y)) + 0.5);
-        int maxY = nearest(std::max(a.y, std::max(b.y, c.y)) - 0.5);
+        int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
+        int maxY = nearest(std::max(A.y(), std::max(B.y(), C.y())) - 0.5);
 
         if (minY < 0)
           minY = 0;
@@ -352,7 +318,6 @@ namespace GFX {
 
         std::cout << "    minY = " << minY << ", maxY = " << maxY << std::endl;
 
-        
         varying_type varying;
 
         for (int y = minY; y <= maxY; ++y) {
@@ -363,11 +328,11 @@ namespace GFX {
           
           int intersections = 0;
 
-          if (intersects(y, a, b))
+          if (intersects(y, A, B))
             intersections |= 1;
-          if (intersects(y, a, c))
+          if (intersects(y, A, C))
             intersections |= 2;
-          if (intersects(y, b, c))
+          if (intersects(y, B, C))
             intersections |= 4;
 
           int xL, xR;
@@ -376,44 +341,67 @@ namespace GFX {
             case 3:
               // A-B and A-C intersect scanline
               {
-                double x1 = intersection(y, a, b);
-                double x2 = intersection(y, a, c);
-                xL = nearest(std::min(x1, x2));
-                xR = nearest(std::max(x1, x2));
-                za = A.z() - (A.z() - B.z()) * (a.y - y) / (a.y - b.y);
-                zb = A.z() - (A.z() - C.z()) * (a.y - y) / (a.y - c.y);
+                double x1 = intersection(y, A, B);
+                double x2 = intersection(y, A, C);
+                if (x1 < x2) {
+                  xL = nearest(x1 + 0.5);
+                  xR = nearest(x2 - 0.5);
+                  za = A.z() - (A.z() - B.z()) * (A.y() - y) / (A.y() - B.y());
+                  zb = A.z() - (A.z() - C.z()) * (A.y() - y) / (A.y() - C.y());
+                } else {
+                  xL = nearest(x2 + 0.5);
+                  xR = nearest(x1 - 0.5);
+                  zb = A.z() - (A.z() - B.z()) * (A.y() - y) / (A.y() - B.y());
+                  za = A.z() - (A.z() - C.z()) * (A.y() - y) / (A.y() - C.y());
+                }
               }
               break;
             case 5:
               // A-B and B-C intersect scanline
               {
-                double x1 = intersection(y, a, b);
-                double x2 = intersection(y, b, c);
-                xL = nearest(std::min(x1, x2));
-                xR = nearest(std::max(x1, x2));
-                za = B.z() - (B.z() - A.z()) * (b.y - y) / (b.y - a.y);
-                zb = B.z() - (B.z() - C.z()) * (b.y - y) / (b.y - c.y);
+                double x1 = intersection(y, A, B);
+                double x2 = intersection(y, B, C);
+                if (x1 < x2) {
+                  xL = nearest(x1 + 0.5);
+                  xR = nearest(x2 - 0.5);
+                  za = B.z() - (B.z() - A.z()) * (B.y() - y) / (B.y() - A.y());
+                  zb = B.z() - (B.z() - C.z()) * (B.y() - y) / (B.y() - C.y());
+                } else {
+                  xL = nearest(x2 + 0.5);
+                  xR = nearest(x1 - 0.5);
+                  zb = B.z() - (B.z() - A.z()) * (B.y() - y) / (B.y() - A.y());
+                  za = B.z() - (B.z() - C.z()) * (B.y() - y) / (B.y() - C.y());
+                }
               }
               break;
             case 6:
               // A-C and B-C intersect scanline
               {
-                double x1 = intersection(y, a, c);
-                double x2 = intersection(y, b, c);
-                xL = nearest(std::min(x1, x2));
-                xR = nearest(std::max(x1, x2));
-                za = C.z() - (C.z() - A.z()) * (c.y - y) / (c.y - a.y);
-                zb = C.z() - (C.z() - B.z()) * (c.y - y) / (c.y - b.y);
+                double x1 = intersection(y, A, C);
+                double x2 = intersection(y, B, C);
+                if (x1 < x2) {
+                  xL = nearest(x1 + 0.5);
+                  xR = nearest(x2 - 0.5);
+                  za = C.z() - (C.z() - A.z()) * (C.y() - y) / (C.y() - A.y());
+                  zb = C.z() - (C.z() - B.z()) * (C.y() - y) / (C.y() - B.y());
+                } else {
+                  xL = nearest(x2 + 0.5);
+                  xR = nearest(x1 - 0.5);
+                  zb = C.z() - (C.z() - A.z()) * (C.y() - y) / (C.y() - A.y());
+                  za = C.z() - (C.z() - B.z()) * (C.y() - y) / (C.y() - B.y());
+                }
               }
               break;
           }
 
+          double dzdx = (zb - za) / static_cast<double>(xR - xL + 1);
 
           for (int x = xL; x <= xR; ++x) {
-            callInterpolationFunction(varyingA, varyingB, varyingC, a, b, c, Point2D(x, y), varying);
+            callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, Point2D(x, y), varying);
             Color color = m_program.fragmentShader().exec(varying);
-            //double z = 1.0001 * zG + (x - G.x) * dzdx + (y - G.y) * dzdy;
-            double z = zb - (zb - za) * (xR - x) / static_cast<double>(xR - xL);
+
+            double z = zb - (xR - x) * dzdx;
+
             m_context.drawPixel(x, y, z, color);
           }
         }

@@ -18,6 +18,7 @@ class GfxWidget : public QLabel
     
     void render1();
     void render2();
+    void renderCube();
 
   protected:
     virtual void paintEvent(QPaintEvent *painter);

@@ -6,7 +6,7 @@ int main(int argc, char **argv)
 {
   QApplication app(argc, argv);
 
-  QPixmap pm(800, 600);
+  QPixmap pm(500, 500);
 
   GfxWidget widget;
   widget.setPixmap(pm);
