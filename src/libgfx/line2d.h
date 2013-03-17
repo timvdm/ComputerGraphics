@@ -1,18 +1,19 @@
-#ifndef GFX_LINE3D_H
-#define GFX_LINE3D_H
+#ifndef GFX_LINE2D_H
+#define GFX_LINE2D_H
 
-#include "types.h"
 #include "color.h"
+#include "point2d.h"
 
 #include <vector>
+#include <cassert>
 
 namespace GFX {
 
 
   /**
-   * @brief Class representing a colored line in 3D.
+   * @brief Class representing a colored line in 2D.
    */
-  struct Line3D
+  struct Line2D
   {
     /**
      * @brief Constructor.
@@ -21,7 +22,7 @@ namespace GFX {
      * @param p2_ The end point of the line.
      * @param color_ The line's color.
      */
-    Line3D(const vec3 &p1_, const vec3 &p2_, const Color &color_ = Color::black())
+    Line2D(const Point2D &p1_, const Point2D &p2_, const Color &color_ = Color::black())
         : p1(p1_), p2(p2_), color(color_)
     {
     }
@@ -34,21 +35,20 @@ namespace GFX {
      * @param x2 The x coordinate for the line's end point.
      * @param y2 The y coordinate for the line's end point.
      */
-    Line3D(Real x1, Real y1, Real z1, Real x2, Real y2, Real z2, 
-        const Color &color_ = Color::black())
-        : p1(x1, y1, z1), p2(x2, y2, z2), color(color_)
+    Line2D(Real x1, Real y1, Real x2, Real y2, const Color &color_ = Color::black())
+        : p1(x1, y1), p2(x2, y2), color(color_)
     {
     }
 
-    vec3 p1; //!< The line's starting point.
-    vec3 p2; //!< The line's end point.
+    Point2D p1; //!< The line's starting point.
+    Point2D p2; //!< The line's end point.
     Color color; //!< The line's color.
   };
 
   /**
-   * @brief A set of 3D lines.
+   * @brief A set of 2D lines.
    */
-  typedef std::vector<Line3D> Lines3D;
+  typedef std::vector<Line2D> Lines2D;
 
 }
 

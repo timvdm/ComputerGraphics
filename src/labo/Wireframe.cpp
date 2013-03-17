@@ -1,12 +1,12 @@
 #include "../utils.h"
 #include "../plugin.h"
 
-#include "../libgfx/lines2d.h"
 #include "../libgfx/transform.h"
 #include "../libgfx/mesh.h"
 #include "../libgfx/utility.h"
 
 #include "LSystem3D.h"
+#include "render.h"
 
 
 namespace CG {

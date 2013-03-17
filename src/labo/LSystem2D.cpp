@@ -1,7 +1,8 @@
 #include "../utils.h"
 #include "../plugin.h"
-#include "../libgfx/lines2d.h"
 #include "../libgfx/utility.h"
+
+#include "render.h"
 
 #include <fstream>
 #include <cmath>

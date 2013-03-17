@@ -1,7 +1,7 @@
 #include "../utils.h"
 #include "../plugin.h"
 
-#include "../libgfx/lines2d.h"
+#include "render.h"
 
 #include <algorithm>
 

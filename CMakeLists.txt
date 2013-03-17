@@ -14,7 +14,6 @@ set(libgfx_SRCS
   src/utils/EasyImage.cc
   #  src/utils/vector.cc
   src/libgfx/transform.cpp
-  src/libgfx/lines2d.cc
 )
 
 add_library(libgfx SHARED ${libgfx_SRCS})
@@ -25,10 +24,11 @@ set(cg_SRCS
   src/utils/lparser.cc
   src/utils/vector.cc
   src/engine.cc
-  src/labo/LineDrawing.cc
-  src/labo/LSystem2D.cc
-  src/labo/LSystem3D.cc
-  src/labo/Wireframe.cc
+  src/labo/render.cpp
+  src/labo/LineDrawing.cpp
+  src/labo/LSystem2D.cpp
+  src/labo/LSystem3D.cpp
+  src/labo/Wireframe.cpp
 )
 
 add_executable(engine ${cg_SRCS})
