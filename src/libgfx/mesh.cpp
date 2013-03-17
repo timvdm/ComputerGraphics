@@ -2,6 +2,136 @@
 #include "utility.h"
 
 namespace GFX {
+      
+  void Mesh::setFaceColor(int index, const Color &color)
+  {
+    assert(index < m_faces.size());
+
+    if (m_colors.size() < m_vertices.size())
+      m_colors.resize(m_vertices.size());
+
+    const Face &face = m_faces[index];
+    for (std::size_t i = 0; i  < face.size(); ++i)
+      m_colors[face[i]] = color;
+  }
+  
+  void Mesh::setVertexColor(int index, const Color &color)
+  {
+    assert(index < m_vertices.size());
+
+    if (m_colors.size() < m_vertices.size())
+      m_colors.resize(m_vertices.size());
+
+    m_colors[index] = color;
+  }
+
+  void Mesh::computeNormals()
+  {
+    m_normals.clear();
+
+    for (std::size_t i = 0; i < m_faces.size(); ++i) {
+      const Face &face = m_faces[i];
+      if (face.size() < 3)
+        continue;
+
+      vec4 AB = m_vertices[face[1]] - m_vertices[face[0]];
+      vec4 AC = m_vertices[face[2]] - m_vertices[face[0]];
+
+      vec4 n(AB.y() * AC.z() - AB.z() * AC.y(),
+             AB.z() * AC.x() - AB.x() * AC.z(),
+             AB.x() * AC.y() - AB.y() * AC.x(), 0.0);
+
+      n.normalize();
+
+      m_normals.push_back(n);    
+    }
+  }
+
+  std::vector<double> Mesh::triangleAttributes(bool normals, bool colors, bool texCoords)
+  {
+    std::vector<double> attr;
+
+    if (normals && m_normals.size() != m_faces.size())
+      computeNormals();
+
+    for (std::size_t i = 0; i < m_faces.size(); ++i) {
+      const Face &face = m_faces[i];
+      if (face.size() != 3)
+        continue;
+
+      addVertexAttributes(attr, i, 0, normals, colors, texCoords);
+      addVertexAttributes(attr, i, 1, normals, colors, texCoords);
+      addVertexAttributes(attr, i, 2, normals, colors, texCoords);
+    }
+
+    return attr;
+  }
+  
+  std::vector<double> Mesh::quadAttributes(bool normals, bool colors, bool texCoords)
+  {
+    std::vector<double> attr;
+
+    if (normals && m_normals.size() != m_faces.size())
+      computeNormals();
+
+    for (std::size_t i = 0; i < m_faces.size(); ++i) {
+      const Face &face = m_faces[i];
+      if (face.size() != 4)
+        continue;
+
+      addVertexAttributes(attr, i, 0, normals, colors, texCoords);
+      addVertexAttributes(attr, i, 1, normals, colors, texCoords);
+      addVertexAttributes(attr, i, 2, normals, colors, texCoords);
+      addVertexAttributes(attr, i, 3, normals, colors, texCoords);
+    }
+
+    return attr;
+  }
+
+  void Mesh::addVertexAttributes(std::vector<double> &attr, int f, int v, bool normals, bool colors, bool texCoords)
+  {
+    const Face &face = m_faces[f];
+
+    attr.push_back(m_vertices[face[v]].x());
+    attr.push_back(m_vertices[face[v]].y());
+    attr.push_back(m_vertices[face[v]].z());
+
+    if (normals) {
+      attr.push_back(m_normals[f].x());
+      attr.push_back(m_normals[f].y());
+      attr.push_back(m_normals[f].z());
+    }
+
+    if (colors) {
+      if (m_colors.size() != m_vertices.size()) {
+        // single color
+        attr.push_back(m_color.r);
+        attr.push_back(m_color.g);
+        attr.push_back(m_color.b);
+        attr.push_back(m_color.a);
+      } else {
+        // per vertex colors
+        attr.push_back(m_colors[face[v]].r);
+        attr.push_back(m_colors[face[v]].g);
+        attr.push_back(m_colors[face[v]].b);
+        attr.push_back(m_colors[face[v]].a);
+      }
+    }
+  }
+
+  Mesh::Face Mesh::make_face(int i, int j, int k, int l, int m)
+  {
+    Face face;
+    face.push_back(i);
+    face.push_back(j);
+    if (k >= 0)
+      face.push_back(k);
+    if (l >= 0)
+      face.push_back(l);
+    if (m >= 0)
+      face.push_back(m);
+    return face;
+  }
 
   std::shared_ptr<Mesh> Mesh::cube()
   {

@@ -78,6 +78,16 @@ namespace GFX {
         return m_zBuffer;
       }
 
+      void clearZBuffer()
+      {
+        m_zBuffer.clear(std::numeric_limits<double>::max());
+      }
+
+      void clearColorBuffer(const Color &color = Color::black())
+      {
+        m_colorBuffer.clear(color);
+      }
+
       void drawPixel(int x, int y, double z, const Color &color)
       {
         //std::cout << "Context::drawPixel()" << std::endl;

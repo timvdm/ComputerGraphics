@@ -3,6 +3,10 @@
 #include <libgfx/program.h>
 #include <libgfx/render3d.h>
 #include <libgfx/transform.h>
+#include <libgfx/mesh.h>
+
+#include <libgfx/lighting.h>
+#include <libgfx/shaders.h>
 
 
 
@@ -137,7 +141,7 @@ void GfxWidget::render()
 {
   m_fps.startRender();
   m_context.colorBuffer().clear(GFX::Color::black());
-  renderHouse();
+  renderCubeLight();
   m_fps.stopRender();
   qDebug() << "FPS: " << m_fps.fps();
 }
@@ -219,8 +223,6 @@ void GfxWidget::render2()
 
   GFX::mat4 scale = GFX::scaleMatrix(1.0);
 
-  //GFX::mat4 rotateX = GFX::xRotationMatrix(angleY);
-  //GFX::mat4 rotateY = GFX::yRotationMatrix(angleX);
   GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
   GFX::mat4 rotateY = GFX::rotationMatrix(angleY, 1, 0, 0);
 
@@ -422,3 +424,120 @@ void GfxWidget::renderHouse()
   painter.drawImage(0, 0, m_image);
 
 }
+
+
+
+
+
+
+
+
+
+
+// 
+// Uniform:
+//
+//   transform (mat4)
+//
+// Attribute:
+// 
+//   0-2: vertex xyz
+//   3-5: normal xyz
+//   6-9: color rgba
+//
+// Varying:
+//
+//   0: normal (vec4)
+//   1: color (Color)
+//
+
+struct LightVertexShader
+{
+  typedef std::tuple<GFX::vec4, GFX::Color> varying_type;
+
+  GFX::vec4 exec(const double *attributes, varying_type &varying)
+  {
+    // normal
+    std::get<0>(varying) = GFX::vec4(attributes[3], attributes[4], attributes[5], 0.0);
+    // color
+    std::get<1>(varying) = GFX::Color(attributes[6], attributes[7], attributes[8], attributes[9]);
+    // transform the vertex position
+    GFX::vec4 position(attributes[0], attributes[1], attributes[2], 1.0);
+    return mvp * position;
+  }
+
+  GFX::mat4 mv; // model-view matrix (transform normals)
+  GFX::mat4 mvp; // model-view-projection matrix (transform vertices)
+};
+
+struct LightFragmentShader
+{
+  typedef std::tuple<GFX::vec4, GFX::Color> varying_type;
+
+  GFX::Color exec(const varying_type &varying, bool backFace = false)
+  {
+    if (backFace)
+      return GFX::Color(200, 200, 200);
+    return std::get<1>(varying);
+  }
+};
+
+namespace GFX {
+
+  template<typename VertexShaderType, typename FragmentShaderType>
+  struct context_traits
+  {
+    typedef VertexShaderType vertex_shader_type;
+    typedef FragmentShaderType fragment_shader_type;
+    typedef typename vertex_shader_type::varying_type varying_type;
+    typedef Program<vertex_shader_type, fragment_shader_type> program_type;
+    typedef Renderer<program_type> renderer_type;
+  };
+
+}
+
+void GfxWidget::renderCubeLight()
+{
+  typedef GFX::context_traits<LightVertexShader, LightFragmentShader> T;
+
+  T::vertex_shader_type   vertexShader;
+  T::fragment_shader_type fragmentShader;
+  T::program_type         program(vertexShader, fragmentShader);
+  T::renderer_type        renderer(m_context, program);
+
+  m_context.clearZBuffer();
+
+  GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
+  GFX::mat4 rotateY = GFX::rotationMatrix(angleY, 1, 0, 0);
+
+  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.0, 10);
+  GFX::mat4 view = GFX::lookAtMatrix(0, 0, m_eyeZ, 0, 0, 0, 0, 1, 0);
+
+  vertexShader.mvp = project * view * rotateX * rotateY; 
+
+  // Get cube attributes: vertex xyz, normal xyz, color rgba (10 doubles per vertex)
+  std::shared_ptr<GFX::Mesh> cube = GFX::Mesh::cube();
+  std::vector<double> attributes = cube->quadAttributes(true, true);
+
+  /*
+  std::cout << "Attributes: " << attributes.size() << std::endl;
+  for (int i = 0; i < attributes.size() / 10; ++i) {
+    for (int j = 0; j < 10; ++j)
+      std::cout << attributes[10 * i + j] << " ";
+    std::cout << std::endl;
+  }
+  */
+
+
+  renderer.drawQuads(&attributes[0], attributes.size(), 10);
+
+  for (int i = 0; i < m_context.width(); ++i)
+    for (int j = 0; j < m_context.height(); ++j) {
+      const GFX::Color &color = m_context.colorBuffer()(i, j);
+      m_image.setPixel(i, m_context.height() - j - 1, color.toARGB());
+    }
+  
+  QPainter painter(this);
+  painter.drawImage(0, 0, m_image);
+}
+

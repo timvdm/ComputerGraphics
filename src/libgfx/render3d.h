@@ -83,6 +83,15 @@ namespace GFX {
                  cA.b * a + cB.b * b + cC.b * c);
   }
 
+  /**
+   * @brief Interpolate normals across triangle.
+   */
+  vec4 interpolateVarying(const vec4 &nA, const vec4 &nB, const vec4 &nC,
+      const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I)
+  {
+    return nA;
+  }
+
   template<int I = 0, typename... Tp>
   typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
       const std::tuple<Tp...>&, const std::tuple<Tp...>&, const std::tuple<Tp...>&,

@@ -2,6 +2,7 @@
 #define GFX_MESH_H
 
 #include "types.h"
+#include "color.h"
 
 #include <vector>
 #include <memory>
@@ -12,6 +13,10 @@ namespace GFX {
   {
     public:
       typedef std::vector<int> Face;
+
+      Mesh() : m_color(Color::red())
+      {
+      }
 
       void addVertex(double x, double y, double z)
       {
@@ -31,6 +36,26 @@ namespace GFX {
       void addVertex(const std::vector<double> &v)
       {
         m_vertices.push_back(vec4(v[0], v[1], v[2], 1.0));
+      }
+
+      void addNormal(double x, double y, double z)
+      {
+        m_normals.push_back(vec4(x, y, z, 1.0));
+      }
+
+      void addNormal(const vec3 &v)
+      {
+        m_normals.push_back(vec4(v.x(), v.y(), v.z(), 1.0));
+      }
+
+      void addNormal(const vec4 &v)
+      {
+        m_normals.push_back(v);
+      }
+
+      void addNormal(const std::vector<double> &v)
+      {
+        m_normals.push_back(vec4(v[0], v[1], v[2], 1.0));
       }
 
       void addFace(int i, int j)
@@ -82,19 +107,46 @@ namespace GFX {
         return m_faces;
       }
 
-      static Face make_face(int i, int j, int k = -1, int l = -1, int m = -1)
+      /**
+       * @brief Set a single color for the entire mesh.
+       *
+       * @param color The color for the mesh.
+       */
+      void setColor(const Color &color)
       {
-        Face face;
-        face.push_back(i);
-        face.push_back(j);
-        if (k >= 0)
-          face.push_back(k);
-        if (l >= 0)
-          face.push_back(l);
-        if (m >= 0)
-          face.push_back(m);
-        return face;
+        m_color = color;
       }
+
+      /**
+       * @brief Set the color for a specific face.
+       *
+       * @param index The face index (indexed from 0).
+       * @param color The new face color.
+       */
+      void setFaceColor(int index, const Color &color);
+
+      /**
+       * @brief Set the color for a specific vertex.
+       *
+       * @param index The vertex index (indexed from 0).
+       * @param color The new vertex color.
+       */
+      void setVertexColor(int index, const Color &color);
+
+      /**
+       * @brief Compute face normals.
+       *
+       * This method computes the face normals assuming face vertices are
+       * ordered counter clockwise.
+       */
+      void computeNormals();
+
+      std::vector<double> triangleAttributes(bool normals = false, bool colors = false, bool texCoords = false);
+
+      std::vector<double> quadAttributes(bool normals = false, bool colors = false, bool texCoords = false);
+
+
+      static Face make_face(int i, int j, int k = -1, int l = -1, int m = -1);
 
       static std::shared_ptr<Mesh> cube();
       static std::shared_ptr<Mesh> tetrahedron();
@@ -107,8 +159,14 @@ namespace GFX {
       static std::shared_ptr<Mesh> torus(int n, int m, double R, double r);
 
     private:
-      std::vector<vec4> m_vertices;
-      std::vector<Face> m_faces;
+      void addVertexAttributes(std::vector<double> &attr, int f, int v, bool normals, bool colors, bool texCoords);
+
+      std::vector<vec4> m_vertices; //!< The vertices.
+      std::vector<Face> m_faces; //!< The faces.
+      std::vector<vec4> m_normals; //!< The face normals.
+      std::vector<Color> m_colors; //!< Per vertex colors.
+      std::vector<vec2> m_texCoords; //!< Per vertex texture coordinates.
+      Color m_color; //!< Single color for entire mesh.
   };
 
 }
