@@ -1,5 +1,7 @@
 #include "render.h"
 
+#include "../libgfx/mesh.h"
+
 #include <limits>
 
 using namespace GFX;
@@ -106,5 +108,30 @@ img::EasyImage draw_lines(Lines2D &lines, int size, const img::Color &bgColor)
   }
 
   return image;
+}
+
+void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines2D &lines)
+{
+  GFX::vec4 p1, p2;
+  for (std::size_t i = 0; i < mesh.faces().size(); ++i) {
+    const std::vector<int> &face = mesh.faces()[i];
+    for (std::size_t j = 0; j < face.size(); ++j) {
+      if (!j) {
+        p1 = mesh.vertices()[face[face.size() - 1]];
+        p2 = mesh.vertices()[face[0]];
+      } else {
+        p1 = mesh.vertices()[face[j-1]];
+        p2 = mesh.vertices()[face[j]];
+      }
+
+      p1 = T * p1;
+      p2 = T * p2;
+
+      GFX::Point2D projP1(p1.x() / -p1.z(), p1.y() / -p1.z());
+      GFX::Point2D projP2(p2.x() / -p2.z(), p2.y() / -p2.z());
+
+      lines.push_back(GFX::Line2D(projP1, projP2, color));
+    }
+  }
 }
 

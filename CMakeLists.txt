@@ -12,8 +12,8 @@ endif()
 
 set(libgfx_SRCS
   src/utils/EasyImage.cc
-  #  src/utils/vector.cc
   src/libgfx/transform.cpp
+  src/libgfx/mesh.cpp
 )
 
 add_library(libgfx SHARED ${libgfx_SRCS})

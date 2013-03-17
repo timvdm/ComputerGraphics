@@ -4,6 +4,7 @@
 #include "types.h"
 
 #include <vector>
+#include <memory>
 
 namespace GFX {
 
@@ -94,6 +95,16 @@ namespace GFX {
           face.push_back(m);
         return face;
       }
+
+      static std::shared_ptr<Mesh> cube();
+      static std::shared_ptr<Mesh> tetrahedron();
+      static std::shared_ptr<Mesh> octahedron();
+      static std::shared_ptr<Mesh> icosahedron();
+      static std::shared_ptr<Mesh> dodecahedron();
+      static std::shared_ptr<Mesh> cone(int n, double h);
+      static std::shared_ptr<Mesh> cylinder(int n, double h);
+      static std::shared_ptr<Mesh> sphere(int n);
+      static std::shared_ptr<Mesh> torus(int n, int m, double R, double r);
 
     private:
       std::vector<vec4> m_vertices;

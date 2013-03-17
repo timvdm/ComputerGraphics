@@ -58,6 +58,18 @@ namespace GFX {
     return angle * M_PI / 180.0;
   }
 
+  inline std::size_t columnMajorIndex(std::size_t row, std::size_t col, std::size_t cols)
+  {
+    return row * cols + col;
+  }
+
+  inline std::size_t rowMajorIndex(std::size_t row, std::size_t col, std::size_t rows)
+  {
+    return row + rows * col;
+  }
+
+
+
 }
 
 #endif

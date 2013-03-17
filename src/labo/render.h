@@ -78,4 +78,10 @@ void center_lines(GFX::Lines2D &lines, const std::pair<int, int> &imageSizes, co
  */
 img::EasyImage draw_lines(GFX::Lines2D &lines, int size, const img::Color &bgColor);
 
+namespace GFX {
+  class Mesh;
+}
+
+void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines2D &lines);
+
 #endif
