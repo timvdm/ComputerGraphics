@@ -11,7 +11,7 @@ print '  </tr>'
 for f in glob.glob('*.ini'):
     base = f[:-4]
     print '  <tr>'
-    print '    <td><img width="60%" src="' + base + '.png"></td><td><img width="80%" src="' + base + '.bmp"></td><td><a href="' + base + '.ini">' + base + '.ini</a></td>'
+    print '    <td><img width="50%" src="' + base + '.png"></td><td><img width="50%" src="' + base + '.bmp"></td><td><a href="' + base + '.ini">' + base + '.ini</a></td>'
     print '  </tr>'
 
 

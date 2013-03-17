@@ -53,6 +53,11 @@ namespace GFX {
     return Point2D(-(d * v.x()) / v.z(), -(d * v.y()) / v.z());
   }
 
+  inline double deg2rad(double angle)
+  {
+    return angle * M_PI / 180.0;
+  }
+
 }
 
 #endif

@@ -1,11 +1,10 @@
 #include "../utils.h"
 #include "../plugin.h"
 #include "../libgfx/lines2d.h"
+#include "../libgfx/utility.h"
 
 #include <fstream>
 #include <cmath>
-
-#define DEG_TO_RAD M_PI / 180.0
 
 namespace CG {
 
@@ -96,10 +95,10 @@ namespace CG {
           for (std::size_t i = 0; i < commands.size(); ++i)
             switch (commands[i]) {
               case '-':
-                state.angle -= DEG_TO_RAD * lSystem.get_angle();
+                state.angle -= GFX::deg2rad(lSystem.get_angle());
                 break;
               case '+':
-                state.angle += DEG_TO_RAD * lSystem.get_angle();
+                state.angle += GFX::deg2rad(lSystem.get_angle());
                 break;
               case '(':
                 state.push();
@@ -115,10 +114,10 @@ namespace CG {
           for (std::size_t i = 0; i < commands.size(); ++i) {
             switch (commands[i]) {
               case '-':
-                state.angle -= DEG_TO_RAD * lSystem.get_angle();
+                state.angle -= GFX::deg2rad(lSystem.get_angle());
                 break;
               case '+':
-                state.angle += DEG_TO_RAD * lSystem.get_angle();
+                state.angle += GFX::deg2rad(lSystem.get_angle());
                 break;
               case '(':
                 state.push();
@@ -144,7 +143,7 @@ namespace CG {
 
       void drawLSystem(const LParser::LSystem2D &lSystem, GFX::Lines2D &lines)
       {
-        LSystemState state(DEG_TO_RAD * lSystem.get_starting_angle());
+        LSystemState state(GFX::deg2rad(lSystem.get_starting_angle()));
         drawLSystem(lSystem, lSystem.get_initiator(), lines, lSystem.get_nr_iterations(), state);
       }
 

@@ -25,12 +25,10 @@ set(cg_SRCS
   src/utils/lparser.cc
   src/utils/vector.cc
   src/engine.cc
-  src/week1/ColorRectangle.cc
-  src/week1/Blocks.cc
-  src/week1/Lines.cc
-  src/week2/LineDrawing.cc
-  src/week2/LSystem2D.cc
-  src/week3/Wireframe.cc
+  src/labo/LineDrawing.cc
+  src/labo/LSystem2D.cc
+  src/labo/LSystem3D.cc
+  src/labo/Wireframe.cc
 )
 
 add_executable(engine ${cg_SRCS})

@@ -100,9 +100,9 @@ namespace GFX {
     // draw the lines
     img::EasyImage image(imageSizes.first, imageSizes.second, bgColor);
     for (std::size_t i = 0; i < lines.size(); ++i) {
-      std::cout << lines[i].p1 << " -> " << lines[i].p2 << std::endl;
+      //std::cout << lines[i].p1 << " -> " << lines[i].p2 << std::endl;
       image.draw_line(lines[i].p1.x + 0.5, lines[i].p1.y + 0.5, lines[i].p2.x + 0.5, lines[i].p2.y + 0.5, 
-          img::Color(255 * lines[i].color.r, 255 * lines[i].color.g, 255 * lines[i].color.b));
+          img::Color(lines[i].color.r, lines[i].color.g, lines[i].color.b));
     }
 
     return image;

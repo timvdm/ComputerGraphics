@@ -137,19 +137,17 @@ void GfxWidget::render()
 {
   m_fps.startRender();
   m_context.colorBuffer().clear(GFX::Color::black());
-  render2();
+  renderHouse();
   m_fps.stopRender();
   qDebug() << "FPS: " << m_fps.fps();
 }
 
 void GfxWidget::render1()
 {
-  GFX::Context context(pixmap()->width(), pixmap()->height());
-
   SimpleVertexShader vertexShader;
   SimpleFragmentShader fragmentShader;
   GFX::Program<SimpleVertexShader, SimpleFragmentShader> program(vertexShader, fragmentShader);
-  GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(context, program);
+  GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(m_context, program);
 
   GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
   GFX::mat4 rotateY = GFX::rotationMatrix(angleY, 1, 0, 0);
@@ -166,8 +164,8 @@ void GfxWidget::render1()
 
   std::cout << "transform matrix:" << std::endl << vertexShader.transform << std::endl;
 
-  context.zBuffer().clear(std::numeric_limits<double>::max());
-  //context.disable(GFX::Context::GFX_ZBUFFER);
+  m_context.zBuffer().clear(std::numeric_limits<double>::max());
+  //m_context.disable(GFX::Context::GFX_ZBUFFER);
 
   renderer.drawLines(lines, 6 * 2 * 15, 6);
 
@@ -201,9 +199,9 @@ void GfxWidget::render1()
   renderer.drawTriangles(triangles, 3 * 36, 6);
 
 
-  for (int i = 0; i < context.width(); ++i)
-    for (int j = 0; j < context.height(); ++j) {
-      const GFX::Color &color = context.colorBuffer()(i, j);
+  for (int i = 0; i < m_context.width(); ++i)
+    for (int j = 0; j < m_context.height(); ++j) {
+      const GFX::Color &color = m_context.colorBuffer()(i, j);
       m_image.setPixel(i, m_context.height() - j - 1, color.toARGB());
     }
   
@@ -214,8 +212,6 @@ void GfxWidget::render1()
 
 void GfxWidget::render2()
 {
-  //GFX::Context context(pixmap()->width(), pixmap()->height());
-
   SimpleVertexShader vertexShader;
   SimpleFragmentShader fragmentShader;
   GFX::Program<SimpleVertexShader, SimpleFragmentShader> program(vertexShader, fragmentShader);
@@ -310,12 +306,10 @@ void GfxWidget::render2()
 
 void GfxWidget::renderCube()
 {
-  GFX::Context context(pixmap()->width(), pixmap()->height());
-
   SimpleVertexShader vertexShader;
   SimpleFragmentShader fragmentShader;
   GFX::Program<SimpleVertexShader, SimpleFragmentShader> program(vertexShader, fragmentShader);
-  GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(context, program);
+  GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(m_context, program);
 
   GFX::mat4 view = GFX::lookAtMatrix(0, 0, 5, 0, 0, 0, 0, 1, 0);
   GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
@@ -324,13 +318,13 @@ void GfxWidget::renderCube()
 
   vertexShader.transform = project * view * scale; 
 
-  context.zBuffer().clear(std::numeric_limits<double>::max());
+  m_context.zBuffer().clear(std::numeric_limits<double>::max());
 
   renderer.drawLines(lines, 6 * 2 * 15, 6);
 
-  for (int i = 0; i < context.width(); ++i)
-    for (int j = 0; j < context.height(); ++j) {
-      const GFX::Color &color = context.colorBuffer()(i, j);
+  for (int i = 0; i < m_context.width(); ++i)
+    for (int j = 0; j < m_context.height(); ++j) {
+      const GFX::Color &color = m_context.colorBuffer()(i, j);
       m_image.setPixel(i, m_context.height() - j - 1, color.toARGB());
     }
   
@@ -339,3 +333,92 @@ void GfxWidget::renderCube()
 
 }
 
+void GfxWidget::renderHouse()
+{
+  SimpleVertexShader vertexShader;
+  SimpleFragmentShader fragmentShader;
+  GFX::Program<SimpleVertexShader, SimpleFragmentShader> program(vertexShader, fragmentShader);
+  GFX::Renderer<GFX::Program<SimpleVertexShader, SimpleFragmentShader> > renderer(m_context, program);
+
+  GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
+  GFX::mat4 rotateY = GFX::rotationMatrix(angleY, 1, 0, 0);
+
+  GFX::mat4 view = GFX::lookAtMatrix(0, 5, 3 * m_eyeZ, 0, 0, 0, 0, 1, 0);
+  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.5, 20);
+
+  vertexShader.transform = project * view * rotateX * rotateY; 
+
+  m_context.zBuffer().clear(std::numeric_limits<double>::max());
+
+  double h = 0.7;
+
+  double quads[] = {
+    -0.5,  0.0,  0.5, 50, 100, 255,
+     0.5,  0.0,  0.5, 50, 100, 255,
+     0.5,    h,  0.5, 50, 100, 255,
+    -0.5,    h,  0.5, 50, 100, 255,
+
+    -0.5,  0.0, -0.5, 50, 100, 255,
+    -0.5,  0.0,  0.5, 50, 100, 255,
+    -0.5,    h,  0.5, 50, 100, 255,
+    -0.5,    h, -0.5, 50, 100, 255,
+
+     0.5,  0.0, -0.5, 50, 100, 255,
+     0.5,  0.0,  0.5, 50, 100, 255,
+     0.5,    h,  0.5, 50, 100, 255,
+     0.5,    h, -0.5, 50, 100, 255,
+
+    -0.5,  0.0, -0.5, 50, 100, 255,
+     0.5,  0.0, -0.5, 50, 100, 255,
+     0.5,    h, -0.5, 50, 100, 255,
+    -0.5,    h, -0.5, 50, 100, 255,
+
+    -0.5,        h,  0.5, 255, 0, 0,
+     0.0,  0.5 + h,  0.5, 255, 0, 0,
+     0.0,  0.5 + h, -0.5, 255, 0, 0,
+    -0.5,        h, -0.5, 255, 0, 0,
+
+     0.5,        h,  0.5, 255, 0, 0,
+     0.0,  0.5 + h,  0.5, 255, 0, 0,
+     0.0,  0.5 + h, -0.5, 255, 0, 0,
+     0.5,        h, -0.5, 255, 0, 0,
+
+     4.5,  0.0, -4.5, 100, 100, 100,
+     4.5,  0.0,  4.5, 100, 100, 100,
+    -4.5,  0.0,  4.5, 100, 100, 100,
+    -4.5,  0.0, -4.5, 100, 100, 100
+  };
+
+
+  double trias[] = {
+    -0.5,        h,  0.5, 50, 100, 255,
+     0.5,        h,  0.5, 50, 100, 255,
+     0.0,  0.5 + h,  0.5, 50, 100, 255,
+  
+     0.5,        h, -0.5, 50, 100, 255,
+    -0.5,        h, -0.5, 50, 100, 255,
+     0.0,  0.5 + h, -0.5, 50, 100, 255
+   };
+
+  
+  for (int i = 0; i < 4; ++i)
+    for (int j = 0; j < 4; ++j) {
+      GFX::mat4 save = vertexShader.transform;
+      vertexShader.transform *= GFX::translationMatrix(2 * i - 3.5, 0, 2 * j - 3.5);
+      renderer.drawQuads(quads, 24 * 6, 6);
+      renderer.drawTriangles(trias, 18 * 2, 6);
+      vertexShader.transform = save;
+    }
+      
+  renderer.drawQuads(quads + 24 * 6, 24, 6);
+
+  for (int i = 0; i < m_context.width(); ++i)
+    for (int j = 0; j < m_context.height(); ++j) {
+      const GFX::Color &color = m_context.colorBuffer()(i, j);
+      m_image.setPixel(i, j, color.toARGB());
+    }
+  
+  QPainter painter(this);
+  painter.drawImage(0, 0, m_image);
+
+}

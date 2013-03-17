@@ -133,17 +133,6 @@ namespace GFX {
         v.z() = ((f - n) / 2.0) * v.z() + (f + n) / 2.0;
       }
 
-      void screenCoordinates(Point2D &p)
-      {
-        double x = 0;
-        double y = 0;
-        double w = m_context.width() / 2.0;
-        double h = m_context.height() / 2.0;
-
-        p.x = w * p.x + (x + w);
-        p.y = h * p.y + (y + h);
-      }
-
       void drawLines(const double *attributes, std::size_t size, std::size_t stride)
       {
         assert((size % (stride * 2)) == 0);
@@ -151,6 +140,26 @@ namespace GFX {
         for (std::size_t i = stride; i < size; i += stride * 2)
           drawLine(attributes + i - stride, attributes + i);
       }
+
+      void drawTriangles(const double *attributes, std::size_t size, std::size_t stride)
+      {
+        assert((size % (stride * 3)) == 0);
+
+        for (std::size_t i = stride * 2; i < size; i += stride * 3)
+          drawTriangle(attributes + i - stride * 2, attributes + i - stride, attributes + i);
+      }
+
+      void drawQuads(const double *attributes, std::size_t size, std::size_t stride)
+      {
+        assert((size % (stride * 4)) == 0);
+
+        for (std::size_t i = stride * 3; i < size; i += stride * 4) {
+          drawTriangle(attributes + i - stride * 3, attributes + i - stride * 2, attributes + i - stride);
+          drawTriangle(attributes + i - stride * 3, attributes + i - stride, attributes + i);
+        }
+      }
+    
+    private:
 
       void drawLine(const double *attributesA, const double *attributesB)
       {
@@ -161,19 +170,19 @@ namespace GFX {
         vec4 A = m_program.vertexShader().exec(attributesA, varyingA);
         vec4 B = m_program.vertexShader().exec(attributesB, varyingB);
 
-        std::cout << "Line: " << std::endl;
-        std::cout << "    clip:      " << print(A) << " -> " << print(B) << std::endl;
+        //std::cout << "Line: " << std::endl;
+        //std::cout << "    clip:      " << print(A) << " -> " << print(B) << std::endl;
 
         // perspective divide
         A /= A.w();
         B /= B.w();
 
-        std::cout << "    NDC:       " << print(A) << " -> " << print(B) << std::endl;
+        //std::cout << "    NDC:       " << print(A) << " -> " << print(B) << std::endl;
 
         screenCoordinates(A);
         screenCoordinates(B);
 
-        std::cout << "    screen:    " << print(A) << " -> " << print(B) << std::endl;
+        //std::cout << "    screen:    " << print(A) << " -> " << print(B) << std::endl;
 
         //std::cout << "    Color: " << std::get<0>(varyingA) << " -> " << std::get<0>(varyingB) << std::endl;
 
@@ -265,15 +274,6 @@ namespace GFX {
           }
         }
       }
-
-      void drawTriangles(const double *attributes, std::size_t size, std::size_t stride)
-      {
-        assert((size % (stride * 3)) == 0);
-
-        for (std::size_t i = stride * 2; i < size; i += stride * 3)
-          drawTriangle(attributes + i - stride * 2, attributes + i - stride, attributes + i);
-      }
-
       bool intersects(double y, const vec4 &P, const vec4 &Q)
       {
         return (P.y() != Q.y()) && ((y - P.y()) * (y - Q.y()) <= 0.0);
@@ -300,13 +300,13 @@ namespace GFX {
         B /= B.w();
         C /= C.w();
         
-        std::cout << "    NDC:       " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
+        //std::cout << "    NDC:       " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
 
         screenCoordinates(A);
         screenCoordinates(B);
         screenCoordinates(C);
         
-        std::cout << "Triangle: " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
+        //std::cout << "Triangle: " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
 
         int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
         int maxY = nearest(std::max(A.y(), std::max(B.y(), C.y())) - 0.5);
@@ -316,7 +316,7 @@ namespace GFX {
         if (maxY >= m_context.height())
           maxY = m_context.height() - 1;
 
-        std::cout << "    minY = " << minY << ", maxY = " << maxY << std::endl;
+        //std::cout << "    minY = " << minY << ", maxY = " << maxY << std::endl;
 
         varying_type varying;
 
@@ -406,11 +406,7 @@ namespace GFX {
           }
         }
       }
-
-
-
-
-    private:
+      
       Context &m_context;
       ProgramType &m_program;
   };
