@@ -265,6 +265,213 @@ namespace GFX {
     }
     //@endcond
  
+    //@}
+
+    /**
+     * @name Exponential Functions
+     *
+     * Component-wise operation. T is double, vec2, vec3, vec4.
+     */
+    //@{
+
+    /**
+     * @brief x^y.
+     */
+    template<typename T>
+    T pow(const T &x, const T &y)
+    {
+      return std::pow(x, y);
+    }
+
+    //@cond IMPL
+    template<>
+    vec2 pow<vec2>(const vec2 &x, const vec2 &y)
+    {
+      return vec2(pow(x.x(), y.x()), pow(x.y(), y.y()));
+    }
+    template<>
+    vec3 pow<vec3>(const vec3 &x, const vec3 &y)
+    {
+      return vec3(pow(x.x(), y.x()), pow(x.y(), y.y()), pow(x.z(), y.z()));
+    }
+    template<>
+    vec4 pow<vec4>(const vec4 &x, const vec4 &y)
+    {
+      return vec4(pow(x.x(), y.x()), pow(x.y(), y.y()), pow(x.z(), y.z()), pow(x.w(), y.w()));
+    }
+    //@endcond
+ 
+    /**
+     * @brief e^x.
+     */
+    template<typename T>
+    T exp(const T &x)
+    {
+      return std::exp(x);
+    }
+
+    //@cond IMPL
+    template<>
+    vec2 exp<vec2>(const vec2 &x)
+    {
+      return vec2(exp(x.x()), exp(x.y()));
+    }
+    template<>
+    vec3 exp<vec3>(const vec3 &x)
+    {
+      return vec3(exp(x.x()), exp(x.y()), exp(x.z()));
+    }
+    template<>
+    vec4 exp<vec4>(const vec4 &x)
+    {
+      return vec4(exp(x.x()), exp(x.y()), exp(x.z()), exp(x.w()));
+    }
+    //@endcond
+
+    /**
+     * @brief ln.
+     */
+    template<typename T>
+    T log(const T &x)
+    {
+      return std::log(x);
+    }
+
+    //@cond IMPL
+    template<>
+    vec2 log<vec2>(const vec2 &x)
+    {
+      return vec2(log(x.x()), log(x.y()));
+    }
+    template<>
+    vec3 log<vec3>(const vec3 &x)
+    {
+      return vec3(log(x.x()), log(x.y()), log(x.z()));
+    }
+    template<>
+    vec4 log<vec4>(const vec4 &x)
+    {
+      return vec4(log(x.x()), log(x.y()), log(x.z()), log(x.w()));
+    }
+    //@endcond
+
+    /**
+     * @brief 2^x.
+     */
+    template<typename T>
+    T exp2(const T &x)
+    {
+      return std::pow(2, x);
+    }
+
+    //@cond IMPL
+    template<>
+    vec2 exp2<vec2>(const vec2 &x)
+    {
+      return vec2(exp2(x.x()), exp2(x.y()));
+    }
+    template<>
+    vec3 exp2<vec3>(const vec3 &x)
+    {
+      return vec3(exp2(x.x()), exp2(x.y()), exp2(x.z()));
+    }
+    template<>
+    vec4 exp2<vec4>(const vec4 &x)
+    {
+      return vec4(exp2(x.x()), exp2(x.y()), exp2(x.z()), exp2(x.w()));
+    }
+    //@endcond
+
+    /**
+     * @brief log_2.
+     */
+    template<typename T>
+    T log2(const T &x)
+    {
+      return std::log(x) / std::log(2);
+    }
+
+    //@cond IMPL
+    template<>
+    vec2 log2<vec2>(const vec2 &x)
+    {
+      return vec2(log2(x.x()), log2(x.y()));
+    }
+    template<>
+    vec3 log2<vec3>(const vec3 &x)
+    {
+      return vec3(log2(x.x()), log2(x.y()), log2(x.z()));
+    }
+    template<>
+    vec4 log2<vec4>(const vec4 &x)
+    {
+      return vec4(log2(x.x()), log2(x.y()), log2(x.z()), log2(x.w()));
+    }
+    //@endcond
+
+    /**
+     * @brief Square root.
+     */
+    template<typename T>
+    T sqrt(const T &x)
+    {
+      return std::sqrt(x);
+    }
+
+    //@cond IMPL
+    template<>
+    vec2 sqrt<vec2>(const vec2 &x)
+    {
+      return vec2(sqrt(x.x()), sqrt(x.y()));
+    }
+    template<>
+    vec3 sqrt<vec3>(const vec3 &x)
+    {
+      return vec3(sqrt(x.x()), sqrt(x.y()), sqrt(x.z()));
+    }
+    template<>
+    vec4 sqrt<vec4>(const vec4 &x)
+    {
+      return vec4(sqrt(x.x()), sqrt(x.y()), sqrt(x.z()), sqrt(x.w()));
+    }
+    //@endcond
+
+    /**
+     * @brief Inverse square root.
+     */
+    template<typename T>
+    T inversesqrt(const T &x)
+    {
+      return 1.0 / std::sqrt(x);
+    }
+
+    //@cond IMPL
+    template<>
+    vec2 inversesqrt<vec2>(const vec2 &x)
+    {
+      return vec2(inversesqrt(x.x()), inversesqrt(x.y()));
+    }
+    template<>
+    vec3 inversesqrt<vec3>(const vec3 &x)
+    {
+      return vec3(inversesqrt(x.x()), inversesqrt(x.y()), inversesqrt(x.z()));
+    }
+    template<>
+    vec4 inversesqrt<vec4>(const vec4 &x)
+    {
+      return vec4(inversesqrt(x.x()), inversesqrt(x.y()), inversesqrt(x.z()), inversesqrt(x.w()));
+    }
+    //@endcond
+
+    //@}
+
+    /**
+     * @name Common Functions
+     *
+     * Component-wise operation. T is double, vec2, vec3, vec4.
+     */
+    //@{
+
 
 
 
@@ -272,6 +479,59 @@ namespace GFX {
 
 
     //@}
+    
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * @brief Maximum value.
+     */
+    template<typename T>
+    T max(const T &x, const T &y)
+    {
+      return std::max(x, y);
+    }
+
+
+    /**
+     * @brief Dot product.
+     */
+    template<typename T>
+    double dot(const T &x, const T &y)
+    {
+      return x * y;
+    }
+
+    //@cond IMPL
+    template<>
+    double dot<vec2>(const vec2 &x, const vec2 &y)
+    {
+      return x.dot(y);
+    }
+    template<>
+    double dot<vec3>(const vec3 &x, const vec3 &y)
+    {
+      return x.dot(y);
+    }
+    template<>
+    double dot<vec4>(const vec4 &x, const vec4 &y)
+    {
+      return x.dot(y);
+    }
+    //@endcond
+
+
+
+
 
   }
 }

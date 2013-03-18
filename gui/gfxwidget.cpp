@@ -429,9 +429,19 @@ void GfxWidget::renderHouse()
 
 
 
+namespace GFX {
 
+  inline vec3 vec3_from_vec4(const vec4 &v)
+  {
+    return vec3(v.x(), v.y(), v.z());
+  }
 
+  inline vec4 vec4_from_vec3(const vec3 &v, double w)
+  {
+    return vec4(v.x(), v.y(), v.z(), w);
+  }
 
+}
 
 
 // 
@@ -453,32 +463,52 @@ void GfxWidget::renderHouse()
 
 struct LightVertexShader
 {
-  typedef std::tuple<GFX::vec4, GFX::Color> varying_type;
-
+  typedef std::tuple<GFX::Color> varying_type;
+    
   GFX::vec4 exec(const double *attributes, varying_type &varying)
   {
-    // normal
-    std::get<0>(varying) = GFX::vec4(attributes[3], attributes[4], attributes[5], 0.0);
+    using namespace GFX::ShaderFunctions;
+
+    // position and normal in model coordinates
+    GFX::vec4 mcPosition(attributes[0], attributes[1], attributes[2], 1.0);
+    GFX::vec4 mcNormal(attributes[3], attributes[4], attributes[5], 0.0);
+
+    // calculate and normalize eye space normal
+    GFX::vec3 ecNormal(GFX::vec3_from_vec4(u_mv * mcNormal));
+    ecNormal.normalize();
+
+    // do light calculation
+    double ecNormalDotLightDirection = max(0.0, dot(ecNormal, u_light.direction));
+
+    // ambient light
+    GFX::vec4 ambient = u_light.light.ambient.array() * u_material.ambient.array();
+
+    // diffuse light
+    GFX::vec4 diffuse = ecNormalDotLightDirection * u_light.light.diffuse.array() * u_material.diffuse.array();
+
     // color
-    std::get<1>(varying) = GFX::Color(attributes[6], attributes[7], attributes[8], attributes[9]);
+    GFX::vec4 color = 255 * (ambient + diffuse);
+    std::get<0>(varying) = GFX::Color(color.x(), color.y(), color.z());
     // transform the vertex position
-    GFX::vec4 position(attributes[0], attributes[1], attributes[2], 1.0);
-    return mvp * position;
+    return u_mvp * mcPosition;
   }
 
-  GFX::mat4 mv; // model-view matrix (transform normals)
-  GFX::mat4 mvp; // model-view-projection matrix (transform vertices)
+  // uniforms
+  GFX::mat4 u_mv; // model-view matrix (transform normals)
+  GFX::mat4 u_mvp; // model-view-projection matrix (transform vertices)
+  GFX::DirectionalLight u_light;
+  GFX::Material u_material;
 };
 
 struct LightFragmentShader
 {
-  typedef std::tuple<GFX::vec4, GFX::Color> varying_type;
+  typedef std::tuple<GFX::Color> varying_type;
 
   GFX::Color exec(const varying_type &varying, bool backFace = false)
   {
     if (backFace)
       return GFX::Color(200, 200, 200);
-    return std::get<1>(varying);
+    return std::get<0>(varying);
   }
 };
 
@@ -505,6 +535,9 @@ void GfxWidget::renderCubeLight()
   T::program_type         program(vertexShader, fragmentShader);
   T::renderer_type        renderer(m_context, program);
 
+  vertexShader.u_material = GFX::Material(GFX::vec4(0.2, 0.0, 0.0, 0.0), GFX::vec4(0.8, 0.0, 0.0, 0.0), GFX::vec4());
+  vertexShader.u_light = GFX::DirectionalLight(GFX::vec3(0, 1, 1).normalized(), GFX::LightSource(GFX::vec4(1.0, 0.0, 0.0, 0.0), GFX::vec4(1.0, 0.0, 0.0, 0.0), GFX::vec4()));
+
   m_context.clearZBuffer();
 
   GFX::mat4 rotateX = GFX::rotationMatrix(-angleX, 0, 1, 0);
@@ -513,7 +546,8 @@ void GfxWidget::renderCubeLight()
   GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.0, 10);
   GFX::mat4 view = GFX::lookAtMatrix(0, 0, m_eyeZ, 0, 0, 0, 0, 1, 0);
 
-  vertexShader.mvp = project * view * rotateX * rotateY; 
+  vertexShader.u_mv = view * rotateX * rotateY; 
+  vertexShader.u_mvp = project * view * rotateX * rotateY; 
 
   // Get cube attributes: vertex xyz, normal xyz, color rgba (10 doubles per vertex)
   std::shared_ptr<GFX::Mesh> cube = GFX::Mesh::cube();
