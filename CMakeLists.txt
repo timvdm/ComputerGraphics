@@ -37,4 +37,4 @@ target_link_libraries(engine libgfx)
 add_subdirectory(test)
 add_subdirectory(gui)
 
-add_subdirectory(OpenGL)
+#add_subdirectory(OpenGL)
