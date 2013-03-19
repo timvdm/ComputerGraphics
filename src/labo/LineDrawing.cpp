@@ -67,6 +67,6 @@ namespace CG {
 
   };
 
-  PLUGIN_FACTORY("LineDrawing", LineDrawing);
+  PLUGIN_FACTORY("LineDrawing", LineDrawing)
 
 }

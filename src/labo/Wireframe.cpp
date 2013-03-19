@@ -181,6 +181,6 @@ namespace CG {
 
   };
 
-  PLUGIN_FACTORY("Wireframe", Wireframe);
+  PLUGIN_FACTORY("Wireframe", Wireframe)
 
 }

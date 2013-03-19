@@ -151,6 +151,6 @@ namespace CG {
 
   };
 
-  PLUGIN_FACTORY("2DLSystem", LSystem2D);
+  PLUGIN_FACTORY("2DLSystem", LSystem2D)
 
 }
