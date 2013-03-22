@@ -283,6 +283,7 @@ namespace GFX {
           }
         }
       }
+
       bool intersects(double y, const vec4 &P, const vec4 &Q)
       {
         return (P.y() != Q.y()) && ((y - P.y()) * (y - Q.y()) <= 0.0);
@@ -292,6 +293,17 @@ namespace GFX {
       {
         return Q.x() + (P.x() - Q.x()) * (y - Q.y()) / (P.y() - Q.y());
       }
+
+      double interpolateZ(double zA, double zB, double zC,
+          const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I)
+      {
+        double total = triangleArea(Point2D(A.x(), A.y()), B, C);
+        double a = triangleArea(I, B, C) / total;
+        double b = triangleArea(I, A, C) / total;
+        double c = triangleArea(I, A, B) / total;
+        return zA * a + zB * b + zC * c;
+      }
+
 
       void drawTriangle(const double *attributesA, const double *attributesB, const double *attributesC)
       {
@@ -308,13 +320,11 @@ namespace GFX {
         A /= A.w();
         B /= B.w();
         C /= C.w();
-        
-        //std::cout << "    NDC:       " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
 
         screenCoordinates(A);
         screenCoordinates(B);
         screenCoordinates(C);
-        
+
         //std::cout << "Triangle: " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
 
         int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
@@ -345,71 +355,58 @@ namespace GFX {
             intersections |= 4;
 
           int xL, xR;
-          double za, zb;
+          double x1, x2;
           switch (intersections) {
             case 3:
               // A-B and A-C intersect scanline
               {
-                double x1 = intersection(y, A, B);
-                double x2 = intersection(y, A, C);
+                x1 = intersection(y, A, B);
+                x2 = intersection(y, A, C);
                 if (x1 < x2) {
                   xL = nearest(x1 + 0.5);
                   xR = nearest(x2 - 0.5);
-                  za = A.z() - (A.z() - B.z()) * (A.y() - y) / (A.y() - B.y());
-                  zb = A.z() - (A.z() - C.z()) * (A.y() - y) / (A.y() - C.y());
                 } else {
                   xL = nearest(x2 + 0.5);
                   xR = nearest(x1 - 0.5);
-                  zb = A.z() - (A.z() - B.z()) * (A.y() - y) / (A.y() - B.y());
-                  za = A.z() - (A.z() - C.z()) * (A.y() - y) / (A.y() - C.y());
                 }
               }
               break;
             case 5:
               // A-B and B-C intersect scanline
               {
-                double x1 = intersection(y, A, B);
-                double x2 = intersection(y, B, C);
+                x1 = intersection(y, A, B);
+                x2 = intersection(y, B, C);
                 if (x1 < x2) {
                   xL = nearest(x1 + 0.5);
                   xR = nearest(x2 - 0.5);
-                  za = B.z() - (B.z() - A.z()) * (B.y() - y) / (B.y() - A.y());
-                  zb = B.z() - (B.z() - C.z()) * (B.y() - y) / (B.y() - C.y());
                 } else {
                   xL = nearest(x2 + 0.5);
                   xR = nearest(x1 - 0.5);
-                  zb = B.z() - (B.z() - A.z()) * (B.y() - y) / (B.y() - A.y());
-                  za = B.z() - (B.z() - C.z()) * (B.y() - y) / (B.y() - C.y());
                 }
               }
               break;
             case 6:
               // A-C and B-C intersect scanline
               {
-                double x1 = intersection(y, A, C);
-                double x2 = intersection(y, B, C);
+                x1 = intersection(y, A, C);
+                x2 = intersection(y, B, C);
                 if (x1 < x2) {
                   xL = nearest(x1 + 0.5);
                   xR = nearest(x2 - 0.5);
-                  za = C.z() - (C.z() - A.z()) * (C.y() - y) / (C.y() - A.y());
-                  zb = C.z() - (C.z() - B.z()) * (C.y() - y) / (C.y() - B.y());
                 } else {
                   xL = nearest(x2 + 0.5);
                   xR = nearest(x1 - 0.5);
-                  zb = C.z() - (C.z() - A.z()) * (C.y() - y) / (C.y() - A.y());
-                  za = C.z() - (C.z() - B.z()) * (C.y() - y) / (C.y() - B.y());
                 }
               }
               break;
           }
-
-          double dzdx = (zb - za) / static_cast<double>(xR - xL + 1);
+          
 
           for (int x = xL; x <= xR; ++x) {
             callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, Point2D(x, y), varying);
             Color color = m_program.fragmentShader().exec(varying);
 
-            double z = zb - (xR - x) * dzdx;
+            double z = interpolateZ(A.z(), B.z(), C.z(), A, B, C, Point2D(x, y));
 
             m_context.drawPixel(x, y, z, color);
           }
