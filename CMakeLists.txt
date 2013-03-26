@@ -13,6 +13,8 @@ endif()
 set(libgfx_SRCS
   src/libgfx/transform.cpp
   src/libgfx/mesh.cpp
+  src/libgfx/texture.cpp
+  src/libgfx/EasyImage.cc
 )
 
 add_library(libgfx SHARED ${libgfx_SRCS})
@@ -28,6 +30,7 @@ set(cg_SRCS
   src/labo/LSystem2D.cpp
   src/labo/LSystem3D.cpp
   src/labo/Wireframe.cpp
+  src/labo/ZBufferedWireframe.cpp
 )
 
 add_executable(engine ${cg_SRCS})

@@ -14,6 +14,36 @@ namespace GFX {
    */
   namespace ShaderFunctions {
 
+    inline vec2 vec4to2(const vec4 &v)
+    {
+      return vec2(v.x(), v.y());
+    }
+
+    inline vec3 vec4to3(const vec4 &v)
+    {
+      return vec3(v.x(), v.y(), v.z());
+    }
+
+    inline vec2 vec3to2(const vec3 &v)
+    {
+      return vec2(v.x(), v.y());
+    }
+
+    inline vec4 vec2to4(const vec2 &v, double z, double w)
+    {
+      return vec4(v.x(), v.y(), z, w);
+    }
+
+    inline vec4 vec3to4(const vec3 &v, double w)
+    {
+      return vec4(v.x(), v.y(), v.z(), w);
+    }
+
+    inline vec3 vec2to3(const vec2 &v, double z)
+    {
+      return vec3(v.x(), v.y(), z);
+    }
+
     /**
      * @name Angle & Trigonometry Functions
      *

@@ -10,11 +10,7 @@ namespace GFX {
   class Buffer
   {
     public:
-      Buffer() : m_width(0), m_height(0)
-      {
-      }
-
-      Buffer(int width, int height) : m_buffer(width * height), m_width(width), m_height(height)
+      Buffer(int width = 1, int height = 1) : m_buffer(width * height), m_width(width), m_height(height)
       {
       }
 

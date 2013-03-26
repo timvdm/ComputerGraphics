@@ -3,8 +3,8 @@
 
 #include <QtGui>
 
+#include <libgfx/point2d.h>
 #include <libgfx/context.h>
-#include <libgfx/spherecoord.h>
 #include <libgfx/fps.h>
 
 class GfxWidget : public QLabel
@@ -12,16 +12,45 @@ class GfxWidget : public QLabel
   Q_OBJECT
 
   public:
-    GfxWidget(QWidget *parent = 0);
+    GfxWidget(int width, int height, QWidget *parent = 0);
 
-    void render();
+    virtual void render() = 0;
+
+    double angleX() const
+    {
+      return m_angleX;
+    }
+
+    double angleY() const
+    {
+      return m_angleY;
+    }
+
+    double eyeZ() const
+    {
+      return m_eyeZ;
+    }
+
+    const GFX::Context& context() const
+    {
+      return m_context;
+    }
+
+    GFX::Context& context()
+    {
+      return m_context;
+    }
+
+    const QImage& image() const
+    {
+      return m_image;
+    }
+
+    QImage& image()
+    {
+      return m_image;
+    }
     
-    void render1();
-    void render2();
-    void renderCube();
-    void renderHouse();
-    void renderCubeLight();
-
   protected:
     virtual void paintEvent(QPaintEvent *painter);
 
@@ -30,16 +59,17 @@ class GfxWidget : public QLabel
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
 
-
-    QImage m_image;
+  private:
     GFX::Context m_context;
-    GFX::SphereCoord m_eye;
+    QImage m_image;
+
+    double m_angleX;
+    double m_angleY;
+    double m_eyeZ;
+
     GFX::Point2D m_mousePos;
     GFX::FramesPerSecond m_fps;
     bool m_dragging;
-    double angleX;
-    double angleY;
-    double m_eyeZ;
 };
 
 #endif
