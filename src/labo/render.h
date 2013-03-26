@@ -5,6 +5,7 @@
 
 
 #include "../libgfx/line2d.h"
+#include "../libgfx/line3d.h"
 
 /**
  * @brief Find the min. and max. paints for a set of lines.
@@ -16,7 +17,9 @@
  *
  * @return The min. and max. points for the specified set of lines.
  */
-std::pair<GFX::Point2D, GFX::Point2D> get_min_max(const GFX::Lines2D &lines);
+template<typename LinesXD>
+std::pair<GFX::Point2D, GFX::Point2D> get_min_max(const LinesXD &lines);
+
 
 /**
  * @brief Compute the size for an image given the min. and max. points.
@@ -55,7 +58,8 @@ GFX::Point2D get_center(const std::pair<GFX::Point2D, GFX::Point2D> &minMax, GFX
  * @param lines The set of lines.
  * @param d The scaling factor for the image.
  */
-void scale_lines(GFX::Lines2D &lines, GFX::Real d);
+template<typename LinesXD>
+void scale_lines(LinesXD &lines, GFX::Real d);
 
 /**
  * @brief Apply a translation to a set of lines to ensure the image is centered
@@ -65,7 +69,8 @@ void scale_lines(GFX::Lines2D &lines, GFX::Real d);
  * @param imageSizes The x and y size of the final image.
  * @param center The current center of the lines.
  */
-void center_lines(GFX::Lines2D &lines, const std::pair<int, int> &imageSizes, const GFX::Point2D &center);
+template<typename LinesXD>
+void center_lines(LinesXD &lines, const std::pair<int, int> &imageSizes, const GFX::Point2D &center);
 
 /**
  * @brief Draw a set of lines in an EasyImage.
@@ -83,5 +88,8 @@ namespace GFX {
 }
 
 void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines2D &lines);
+void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines3D &lines);
+
+img::EasyImage draw_zbuffered_lines(GFX::Lines3D &lines, int size, const img::Color &bgColor);
 
 #endif

@@ -18,6 +18,7 @@ namespace CG {
     try {
       ifs >> lSystem;
     } catch (const std::exception &e) {
+      std::cout << 1 << std::endl;
       std::cerr << e.what() << std::endl;
       return 0;
     }

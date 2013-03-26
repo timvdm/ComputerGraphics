@@ -1,17 +1,13 @@
 #include <QtGui>
 
-#include "gfxwidget.h"
+#include "texturewidget.h"
 
 int main(int argc, char **argv)
 {
   QApplication app(argc, argv);
 
-  QPixmap pm(500, 500);
-
-  GfxWidget widget;
-  widget.setPixmap(pm);
+  TextureWidget widget(800, 800);
   widget.show();
-
 
   return app.exec();
 }

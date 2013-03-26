@@ -72,22 +72,42 @@ namespace GFX {
    * @return The interpolated color.
    */
   Color interpolateVarying(const Color &cA, const Color &cB, const Color &cC,
-      const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I)
+                           const vec4 &A, const vec4 &B, const vec4 &C,
+                           double a, double b, double c)
   {
-    double total = triangleArea(Point2D(A.x(), A.y()), B, C);
-    double a = triangleArea(I, B, C) / total;
-    double b = triangleArea(I, A, C) / total;
-    double c = triangleArea(I, A, B) / total;
     return Color(cA.r * a + cB.r * b + cC.r * c,
                  cA.g * a + cB.g * b + cC.g * c,
                  cA.b * a + cB.b * b + cC.b * c);
   }
 
+  TexCoord interpolateVarying(const TexCoord &uvA, const TexCoord &uvB, const TexCoord &uvC,
+                              const vec4 &A, const vec4 &B, const vec4 &C,
+                              double a, double b, double c)
+  {
+    double one_over_wA = 1.0 / A.w();
+    double one_over_wB = 1.0 / B.w();
+    double one_over_wC = 1.0 / C.w();
+
+    double u_over_wA = uvA.u * one_over_wA;
+    double u_over_wB = uvB.u * one_over_wB;
+    double u_over_wC = uvC.u * one_over_wC;
+
+    double v_over_wA = uvA.v * one_over_wA;
+    double v_over_wB = uvB.v * one_over_wB;
+    double v_over_wC = uvC.v * one_over_wC;
+
+    double one_over_w = one_over_wA * a + one_over_wB * b + one_over_wC * c;
+
+    return TexCoord((u_over_wA * a + u_over_wB * b + u_over_wC * c) / one_over_w,
+                    (v_over_wA * a + v_over_wB * b + v_over_wC * c) / one_over_w);
+  }
+ 
   /**
    * @brief Interpolate normals across triangle.
    */
   vec4 interpolateVarying(const vec4 &nA, const vec4 &nB, const vec4 &nC,
-      const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I)
+                          const vec4 &A, const vec4 &B, const vec4 &C,
+                          double a, double b, double c)
   {
     return nA;
   }
@@ -95,17 +115,17 @@ namespace GFX {
   template<int I = 0, typename... Tp>
   typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
       const std::tuple<Tp...>&, const std::tuple<Tp...>&, const std::tuple<Tp...>&,
-      const vec4&, const vec4&, const vec4&, const Point2D&, std::tuple<Tp...>&)
+      const vec4&, const vec4&, const vec4&, double, double, double, std::tuple<Tp...>&)
   {
   }
 
   template<int I = 0, typename... Tp>
   typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
       const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB, const std::tuple<Tp...> &varyingC,
-      const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &E, std::tuple<Tp...> &varying)
+      const vec4 &A, const vec4 &B, const vec4 &C, double a, double b, double c, std::tuple<Tp...> &varying)
   {
-    std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), std::get<I>(varyingC), A, B, C, E);
-    callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, varyingC, A, B, C, E, varying);
+    std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), std::get<I>(varyingC), A, B, C, a, b, c);
+    callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
   }
 
   template<typename ProgramType>
@@ -140,6 +160,14 @@ namespace GFX {
         v.x() = w * v.x() + (x + w);
         v.y() = h * v.y() + (y + h);
         v.z() = ((f - n) / 2.0) * v.z() + (f + n) / 2.0;
+      }
+      
+      void perspectiveDivide(vec4 &v)
+      {
+        double one_over_w = 1.0 / v.w();
+        v.x() *= one_over_w;
+        v.y() *= one_over_w;
+        v.z() *= one_over_w;
       }
 
       void drawLines(const double *attributes, std::size_t size, std::size_t stride)
@@ -283,6 +311,7 @@ namespace GFX {
           }
         }
       }
+
       bool intersects(double y, const vec4 &P, const vec4 &Q)
       {
         return (P.y() != Q.y()) && ((y - P.y()) * (y - Q.y()) <= 0.0);
@@ -293,30 +322,72 @@ namespace GFX {
         return Q.x() + (P.x() - Q.x()) * (y - Q.y()) / (P.y() - Q.y());
       }
 
+      void barycentricCoeff(const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I, double &a, double &b, double &c)
+      {
+        double total = triangleArea(Point2D(A.x(), A.y()), B, C);
+        a = triangleArea(I, B, C) / total;
+        b = triangleArea(I, A, C) / total;
+        c = triangleArea(I, A, B) / total;
+      }
+
+      std::pair<int, int> computeXRange(int y, const vec4 &A, const vec4 &B, const vec4 &C)
+      {
+        // compute the intersections between scanline and triangle edges
+        int intersections = 0;
+        if (intersects(y, A, B))
+          intersections |= 1;
+        if (intersects(y, A, C))
+          intersections |= 2;
+        if (intersects(y, B, C))
+          intersections |= 4;
+
+        double xa, xb;
+        switch (intersections) {
+          case 3:
+            // A-B and A-C intersect scanline
+            xa = intersection(y, A, B);
+            xb = intersection(y, A, C);
+            break;
+          case 5:
+            // A-B and B-C intersect scanline
+            xa = intersection(y, A, B);
+            xb = intersection(y, B, C);
+            break;
+          case 6:
+            // A-C and B-C intersect scanline
+            xb = intersection(y, A, C);
+            xa = intersection(y, B, C);
+            break;
+        }
+
+        if (xa < xb)
+          return std::make_pair(nearest(xa + 0.5), nearest(xb - 0.5));
+        return std::make_pair(nearest(xb + 0.5), nearest(xa - 0.5));
+      }
+
       void drawTriangle(const double *attributesA, const double *attributesB, const double *attributesC)
       {
+        // varyings to be filled in by vertex shader
         varying_type varyingA;
         varying_type varyingB;
         varying_type varyingC;
 
-        // execute vertex shader
+        // execute vertex shader (model coordinates -> clip coordinates)
         vec4 A = m_program.vertexShader().exec(attributesA, varyingA);
         vec4 B = m_program.vertexShader().exec(attributesB, varyingB);
         vec4 C = m_program.vertexShader().exec(attributesC, varyingC);
 
-        // perspective divide
-        A /= A.w();
-        B /= B.w();
-        C /= C.w();
-        
-        //std::cout << "    NDC:       " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
+        // perspective divide (clip coordinates -> normalized device coordinates (NDC))
+        perspectiveDivide(A);
+        perspectiveDivide(B);
+        perspectiveDivide(C);
 
+        // compute screen coordinates (NDC -> screen coordinates)
         screenCoordinates(A);
         screenCoordinates(B);
         screenCoordinates(C);
-        
-        //std::cout << "Triangle: " << print(A) << " -> " << print(B) << " -> " << print(C) << std::endl;
-
+       
+        // determine y range in screen coordinates
         int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
         int maxY = nearest(std::max(A.y(), std::max(B.y(), C.y())) - 0.5);
 
@@ -325,92 +396,30 @@ namespace GFX {
         if (maxY >= m_context.height())
           maxY = m_context.height() - 1;
 
-        //std::cout << "    minY = " << minY << ", maxY = " << maxY << std::endl;
-
+        // interpolated varying for fragment shader
         varying_type varying;
 
         for (int y = minY; y <= maxY; ++y) {
-
-          // if the y value is outside the color buffer there is no need to draw it
-          if (y < 0 || y >= m_context.height())
-            continue;
-          
-          int intersections = 0;
-
-          if (intersects(y, A, B))
-            intersections |= 1;
-          if (intersects(y, A, C))
-            intersections |= 2;
-          if (intersects(y, B, C))
-            intersections |= 4;
-
-          int xL, xR;
-          double za, zb;
-          switch (intersections) {
-            case 3:
-              // A-B and A-C intersect scanline
-              {
-                double x1 = intersection(y, A, B);
-                double x2 = intersection(y, A, C);
-                if (x1 < x2) {
-                  xL = nearest(x1 + 0.5);
-                  xR = nearest(x2 - 0.5);
-                  za = A.z() - (A.z() - B.z()) * (A.y() - y) / (A.y() - B.y());
-                  zb = A.z() - (A.z() - C.z()) * (A.y() - y) / (A.y() - C.y());
-                } else {
-                  xL = nearest(x2 + 0.5);
-                  xR = nearest(x1 - 0.5);
-                  zb = A.z() - (A.z() - B.z()) * (A.y() - y) / (A.y() - B.y());
-                  za = A.z() - (A.z() - C.z()) * (A.y() - y) / (A.y() - C.y());
-                }
-              }
-              break;
-            case 5:
-              // A-B and B-C intersect scanline
-              {
-                double x1 = intersection(y, A, B);
-                double x2 = intersection(y, B, C);
-                if (x1 < x2) {
-                  xL = nearest(x1 + 0.5);
-                  xR = nearest(x2 - 0.5);
-                  za = B.z() - (B.z() - A.z()) * (B.y() - y) / (B.y() - A.y());
-                  zb = B.z() - (B.z() - C.z()) * (B.y() - y) / (B.y() - C.y());
-                } else {
-                  xL = nearest(x2 + 0.5);
-                  xR = nearest(x1 - 0.5);
-                  zb = B.z() - (B.z() - A.z()) * (B.y() - y) / (B.y() - A.y());
-                  za = B.z() - (B.z() - C.z()) * (B.y() - y) / (B.y() - C.y());
-                }
-              }
-              break;
-            case 6:
-              // A-C and B-C intersect scanline
-              {
-                double x1 = intersection(y, A, C);
-                double x2 = intersection(y, B, C);
-                if (x1 < x2) {
-                  xL = nearest(x1 + 0.5);
-                  xR = nearest(x2 - 0.5);
-                  za = C.z() - (C.z() - A.z()) * (C.y() - y) / (C.y() - A.y());
-                  zb = C.z() - (C.z() - B.z()) * (C.y() - y) / (C.y() - B.y());
-                } else {
-                  xL = nearest(x2 + 0.5);
-                  xR = nearest(x1 - 0.5);
-                  zb = C.z() - (C.z() - A.z()) * (C.y() - y) / (C.y() - A.y());
-                  za = C.z() - (C.z() - B.z()) * (C.y() - y) / (C.y() - B.y());
-                }
-              }
-              break;
-          }
-
-          double dzdx = (zb - za) / static_cast<double>(xR - xL + 1);
+          // compute x range in screen coordinates
+          std::pair<int, int> xRange = computeXRange(y, A, B, C);
+          int xL = std::max(xRange.first, 0);
+          int xR = std::min(xRange.second, m_context.width() - 1);
 
           for (int x = xL; x <= xR; ++x) {
-            callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, Point2D(x, y), varying);
+            // compute barycontric coefficients for interpolation            
+            double a, b, c;
+            barycentricCoeff(A, B, C, GFX::Point2D(x, y), a, b, c);
+            
+            // interpolate 1/z
+            double z = (1.0 / A.z()) * a + (1.0 / B.z()) * b + (1.0 / C.z()) * c;
+            
+            // interpolate varyings
+            callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
+
+            // execute fragment shader
             Color color = m_program.fragmentShader().exec(varying);
 
-            double z = zb - (xR - x) * dzdx;
-
+            // draw the pixel
             m_context.drawPixel(x, y, z, color);
           }
         }

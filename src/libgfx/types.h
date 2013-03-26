@@ -25,6 +25,20 @@ namespace GFX {
     return ss.str();
   }
 
+  struct TexCoord
+  {
+    TexCoord() : u(0.0), v(0.0)
+    {
+    }
+
+    TexCoord(double u_, double v_) : u(u_), v(v_)
+    {
+    }
+
+    double u;
+    double v;
+  };
+
 }
 
 #endif

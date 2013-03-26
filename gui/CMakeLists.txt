@@ -10,22 +10,25 @@ if (QT4_FOUND)
   include_directories(../src)
 
 
-  set(gfxgui_HDRS
+  set(texture_HDRS
     gfxwidget.h
+    texturewidget.h
   )
 
-  set(gfxgui_SRCS
-    main.cpp
+  set(texture_SRCS
+    libgfx/
+    texture.cpp
     gfxwidget.cpp
+    texturewidget.cpp
   )
 
-  qt4_wrap_cpp(gfxgui_HDRS_MOC ${gfxgui_HDRS})
+  qt4_wrap_cpp(texture_HDRS_MOC ${texture_HDRS})
 
   include(${QT_USE_FILE})
   add_definitions(${QT_DEFINITIONS})
 
-  add_executable(gui ${gfxgui_SRCS} ${gfxgui_HDRS_MOC})
-  target_link_libraries(gui libgfx ${QT_LIBRARIES})
+  add_executable(texture ${texture_SRCS} ${texture_HDRS_MOC})
+  target_link_libraries(texture libgfx ${QT_LIBRARIES})
 
 else()
   message(STATUS "Qt4 not found: not building GUI example.")
