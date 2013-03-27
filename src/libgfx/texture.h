@@ -41,6 +41,7 @@ namespace GFX {
 
     private:
       std::vector<Buffer<Color> > m_textures;
+      std::vector<int> m_mipmap;
   };
 
 }
