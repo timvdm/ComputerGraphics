@@ -22,7 +22,7 @@ namespace CG {
         } catch (const std::exception &e) {
           std::cerr << "Could not parse color (using default black)" << std::endl;
         }
-        
+
         return GFX::Color(0, 0, 0);
       }
 
@@ -48,7 +48,7 @@ namespace CG {
 
         return m;
       }
-      
+
       bool renderLineDrawing(const std::string &figureName, const ini::Configuration &conf,
           GFX::Lines2D &lines, const GFX::mat4 &T)
       {
@@ -77,7 +77,7 @@ namespace CG {
           return false;
         }
 
-        renderMesh(mesh, color, T, lines);
+        mesh_to_lines2d(mesh, color, T, lines);
 
         return true;
       }
@@ -99,9 +99,9 @@ namespace CG {
           std::cerr << e.what() << std::endl;
           return img::EasyImage();
         }
-        
+
         GFX::mat4 project = GFX::projectionMatrix(eye[0], eye[1], eye[2]);
-        
+
         GFX::Lines2D lines;
 
         for (int i = 0; i < nrFigures; ++i) {
@@ -110,7 +110,7 @@ namespace CG {
           try {
             std::string type = conf[figureName]["type"].as_string_or_die();
             GFX::Color color = extractColor(conf[figureName]["color"]);
-        
+
             GFX::mat4 model = modelMatrix(figureName, conf);
 
             if (type == "LineDrawing") {
@@ -119,54 +119,54 @@ namespace CG {
                 return img::EasyImage();
 
             } else if (type == "Cube") {
-              
-              renderMesh(*GFX::Mesh::cube(), color, project * model, lines);
+
+              mesh_to_lines2d(*GFX::Mesh::cube(), color, project * model, lines);
 
             } else if (type == "Tetrahedron") {
-              
-              renderMesh(*GFX::Mesh::tetrahedron(), color, project * model, lines);
+
+              mesh_to_lines2d(*GFX::Mesh::tetrahedron(), color, project * model, lines);
 
             } else if (type == "Octahedron") {
-              
-              renderMesh(*GFX::Mesh::octahedron(), color, project * model, lines);
+
+              mesh_to_lines2d(*GFX::Mesh::octahedron(), color, project * model, lines);
 
             } else if (type == "Icosahedron") {
-              
-              renderMesh(*GFX::Mesh::icosahedron(), color, project * model, lines);
+
+              mesh_to_lines2d(*GFX::Mesh::icosahedron(), color, project * model, lines);
 
             } else if (type == "Dodecahedron") {
-              
-              renderMesh(*GFX::Mesh::dodecahedron(), color, project * model, lines);
+
+              mesh_to_lines2d(*GFX::Mesh::dodecahedron(), color, project * model, lines);
 
             } else if (type == "Cone") {
-              
+
               int n = conf[figureName]["n"];
               GFX::Real h = conf[figureName]["height"].as_double_or_die();
-              renderMesh(*GFX::Mesh::cone(n, h), color, project * model, lines);
+              mesh_to_lines2d(*GFX::Mesh::cone(n, h), color, project * model, lines);
 
             } else if (type == "Cylinder") {
-              
+
               int n = conf[figureName]["n"];
               GFX::Real h = conf[figureName]["height"].as_double_or_die();
-              renderMesh(*GFX::Mesh::cylinder(n, h), color, project * model, lines);
+              mesh_to_lines2d(*GFX::Mesh::cylinder(n, h), color, project * model, lines);
 
             } else if (type == "Sphere") {
-              
+
               int n = conf[figureName]["n"];
-              renderMesh(*GFX::Mesh::sphere(n), color, project * model, lines);
+              mesh_to_lines2d(*GFX::Mesh::sphere(n), color, project * model, lines);
 
             } else if (type == "Torus") {
-              
+
               int n = conf[figureName]["n"];
               int m = conf[figureName]["m"];
               GFX::Real R = conf[figureName]["R"].as_double_or_die();
               GFX::Real r = conf[figureName]["r"].as_double_or_die();
-              renderMesh(*GFX::Mesh::torus(n, m, R, r), color, project * model, lines);
+              mesh_to_lines2d(*GFX::Mesh::torus(n, m, R, r), color, project * model, lines);
 
             } else if (type == "3DLSystem") {
 
               std::string inputfile = conf[figureName]["inputfile"].as_string_or_die();
-              renderMesh(*LSystem3D::generateMesh(inputfile), color, project * model, lines);
+              mesh_to_lines2d(*LSystem3D::generateMesh(inputfile), color, project * model, lines);
 
             }
 

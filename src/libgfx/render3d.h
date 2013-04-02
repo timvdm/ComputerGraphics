@@ -9,123 +9,188 @@
 
 namespace GFX {
 
-  /**
-   * @brief Compute triangle area given three 2D coordinates.
-   *
-   * @param A The 2D coordinates for the first vertex.
-   * @param B The 2D coordinates for the second vertex.
-   * @param C The 2D coordinates for the last vertex.
-   *
-   * @return The interpolated color.
-   */
-  Real triangleArea(const Point2D &A, const vec4 &B, const vec4 &C)
-  {
-    // shoelace or surveyor's formula
-    return 0.5 * std::abs((A.x - C.x()) * (B.y() - A.y) - (A.x - B.x()) * (C.y() - A.y));
-  }
+  namespace impl {
 
-  Real distance(Real x0, Real y0, Real x1, Real y1)
-  {
-    Real dx = x1 - x0;
-    Real dy = y1 - y0;
-    return std::sqrt(dx * dx + dy * dy);
-  }
+    /**
+     * @brief Compute triangle area given three 2D coordinates.
+     *
+     * @param A The 2D coordinates for the first vertex.
+     * @param B The 2D coordinates for the second vertex.
+     * @param C The 2D coordinates for the last vertex.
+     *
+     * @return The interpolated color.
+     */
+    Real triangleArea(const Point2D &A, const vec4 &B, const vec4 &C)
+    {
+      // shoelace or surveyor's formula
+      return 0.5 * std::abs((A.x - C.x()) * (B.y() - A.y) - (A.x - B.x()) * (C.y() - A.y));
+    }
 
-  Color interpolateVarying(const Color &cA, const Color &cB, const vec4 &A, const vec4 &B, const Point2D &I)
-  {
-    Real a = distance(B.x(), B.y(), I.x, I.y) / distance(A.x(), A.y(), B.x(), B.y());
-    Real b = 1.0 - a;
-    return Color(cA.r * a + cB.r * b, cA.g * a + cB.g * b, cA.b * a + cB.b * b);
-  }
+    Real distance(Real x0, Real y0, Real x1, Real y1)
+    {
+      Real dx = x1 - x0;
+      Real dy = y1 - y0;
+      return std::sqrt(dx * dx + dy * dy);
+    }
 
-  template<int I = 0, typename... Tp>
-  typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
-      const std::tuple<Tp...>&, const std::tuple<Tp...>&, const vec4 &,
-      const vec4 &, const Point2D &, std::tuple<Tp...>&)
-  {
-  }
+    Color interpolateVarying(const Color &cA, const Color &cB, const vec4 &A, const vec4 &B, const Point2D &I)
+    {
+      Real a = distance(B.x(), B.y(), I.x, I.y) / distance(A.x(), A.y(), B.x(), B.y());
+      Real b = 1.0 - a;
+      return Color(cA.r * a + cB.r * b, cA.g * a + cB.g * b, cA.b * a + cB.b * b);
+    }
 
-  template<int I = 0, typename... Tp>
-  typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
-      const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB, 
-      const vec4 &A, const vec4 &B, const Point2D &C, std::tuple<Tp...> &varying)
-  {
-    std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), A, B, C);
-    callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, A, B, C, varying);
-  }
+    template<int I = 0, typename... Tp>
+      typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
+          const std::tuple<Tp...>&, const std::tuple<Tp...>&, const vec4 &,
+          const vec4 &, const Point2D &, std::tuple<Tp...>&)
+      {
+      }
+
+    template<int I = 0, typename... Tp>
+      typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
+          const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB,
+          const vec4 &A, const vec4 &B, const Point2D &C, std::tuple<Tp...> &varying)
+      {
+        std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), A, B, C);
+        callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, A, B, C, varying);
+      }
 
 
-  /**
-   * @brief Interpolate a Color across a triangle using barycentric interpolation.
-   *
-   * The barycentric interpolation uses the area of the triangles ABC, IAB, IAC
-   * and IBC to compute the percentages of each color.
-   *
-   * @param cA The color for vertex A.
-   * @param cB The color for vertex B.
-   * @param cC The color for vertex C.
-   * @param A The 2D projected coordinates for vertex A.
-   * @param B The 2D projected coordinates for vertex B.
-   * @param C The 2D projected coordinates for vertex C.
-   * @param I The 2D projected coordinates for which to interpolate the color.
-   *
-   * @return The interpolated color.
-   */
-  Color interpolateVarying(const Color &cA, const Color &cB, const Color &cC,
-                           const vec4 &A, const vec4 &B, const vec4 &C,
-                           Real a, Real b, Real c)
-  {
-    return Color(cA.r * a + cB.r * b + cC.r * c,
-                 cA.g * a + cB.g * b + cC.g * c,
-                 cA.b * a + cB.b * b + cC.b * c);
-  }
+    /**
+     * @brief Interpolate a Color across a triangle using barycentric interpolation.
+     *
+     * The barycentric interpolation uses the area of the triangles ABC, IAB, IAC
+     * and IBC to compute the percentages of each color.
+     *
+     * @param cA The color for vertex A.
+     * @param cB The color for vertex B.
+     * @param cC The color for vertex C.
+     * @param A The 2D projected coordinates for vertex A.
+     * @param B The 2D projected coordinates for vertex B.
+     * @param C The 2D projected coordinates for vertex C.
+     * @param I The 2D projected coordinates for which to interpolate the color.
+     *
+     * @return The interpolated color.
+     */
+    Color interpolateVarying(const Color &cA, const Color &cB, const Color &cC,
+        const vec4 &A, const vec4 &B, const vec4 &C,
+        Real a, Real b, Real c)
+    {
+      return Color(cA.r * a + cB.r * b + cC.r * c,
+          cA.g * a + cB.g * b + cC.g * c,
+          cA.b * a + cB.b * b + cC.b * c);
+    }
 
-  TexCoord interpolateVarying(const TexCoord &uvA, const TexCoord &uvB, const TexCoord &uvC,
-                              const vec4 &A, const vec4 &B, const vec4 &C,
-                              Real a, Real b, Real c)
-  {
-    Real one_over_wA = 1.0 / A.w();
-    Real one_over_wB = 1.0 / B.w();
-    Real one_over_wC = 1.0 / C.w();
+    TexCoord interpolateVarying(const TexCoord &uvA, const TexCoord &uvB, const TexCoord &uvC,
+        const vec4 &A, const vec4 &B, const vec4 &C,
+        Real a, Real b, Real c)
+    {
+      Real one_over_wA = 1.0 / A.w();
+      Real one_over_wB = 1.0 / B.w();
+      Real one_over_wC = 1.0 / C.w();
 
-    Real u_over_wA = uvA.u * one_over_wA;
-    Real u_over_wB = uvB.u * one_over_wB;
-    Real u_over_wC = uvC.u * one_over_wC;
+      Real u_over_wA = uvA.u * one_over_wA;
+      Real u_over_wB = uvB.u * one_over_wB;
+      Real u_over_wC = uvC.u * one_over_wC;
 
-    Real v_over_wA = uvA.v * one_over_wA;
-    Real v_over_wB = uvB.v * one_over_wB;
-    Real v_over_wC = uvC.v * one_over_wC;
+      Real v_over_wA = uvA.v * one_over_wA;
+      Real v_over_wB = uvB.v * one_over_wB;
+      Real v_over_wC = uvC.v * one_over_wC;
 
-    Real one_over_w = one_over_wA * a + one_over_wB * b + one_over_wC * c;
+      Real one_over_w = one_over_wA * a + one_over_wB * b + one_over_wC * c;
 
-    return TexCoord((u_over_wA * a + u_over_wB * b + u_over_wC * c) / one_over_w,
-                    (v_over_wA * a + v_over_wB * b + v_over_wC * c) / one_over_w);
-  }
- 
-  /**
-   * @brief Interpolate normals across triangle.
-   */
-  vec4 interpolateVarying(const vec4 &nA, const vec4 &nB, const vec4 &nC,
-                          const vec4 &A, const vec4 &B, const vec4 &C,
-                          Real a, Real b, Real c)
-  {
-    return nA;
-  }
+      return TexCoord((u_over_wA * a + u_over_wB * b + u_over_wC * c) / one_over_w,
+          (v_over_wA * a + v_over_wB * b + v_over_wC * c) / one_over_w);
+    }
 
-  template<int I = 0, typename... Tp>
-  typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
-      const std::tuple<Tp...>&, const std::tuple<Tp...>&, const std::tuple<Tp...>&,
-      const vec4&, const vec4&, const vec4&, Real, Real, Real, std::tuple<Tp...>&)
-  {
-  }
+    /**
+     * @brief Interpolate normals across triangle.
+     */
+    vec4 interpolateVarying(const vec4 &nA, const vec4 &nB, const vec4 &nC,
+        const vec4 &A, const vec4 &B, const vec4 &C,
+        Real a, Real b, Real c)
+    {
+      return nA;
+    }
 
-  template<int I = 0, typename... Tp>
-  typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
-      const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB, const std::tuple<Tp...> &varyingC,
-      const vec4 &A, const vec4 &B, const vec4 &C, Real a, Real b, Real c, std::tuple<Tp...> &varying)
-  {
-    std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), std::get<I>(varyingC), A, B, C, a, b, c);
-    callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
+    template<int I = 0, typename... Tp>
+    typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
+        const std::tuple<Tp...>&, const std::tuple<Tp...>&, const std::tuple<Tp...>&,
+        const vec4&, const vec4&, const vec4&, Real, Real, Real, std::tuple<Tp...>&)
+    {
+    }
+
+    template<int I = 0, typename... Tp>
+    typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
+        const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB, const std::tuple<Tp...> &varyingC,
+        const vec4 &A, const vec4 &B, const vec4 &C, Real a, Real b, Real c, std::tuple<Tp...> &varying)
+    {
+      std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), std::get<I>(varyingC), A, B, C, a, b, c);
+      callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
+    }
+
+    void perspective_divide(vec4 &v)
+    {
+      Real one_over_w = 1.0 / v.w();
+      v.x() *= one_over_w;
+      v.y() *= one_over_w;
+      v.z() *= one_over_w;
+    }
+
+    bool intersects(Real y, const vec4 &P, const vec4 &Q)
+    {
+      return (P.y() != Q.y()) && ((y - P.y()) * (y - Q.y()) <= 0.0);
+    }
+
+    Real intersection(Real y, const vec4 &P, const vec4 &Q)
+    {
+      return Q.x() + (P.x() - Q.x()) * (y - Q.y()) / (P.y() - Q.y());
+    }
+
+    void barycentric_coeff(const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I, Real &a, Real &b, Real &c)
+    {
+      Real total = triangleArea(Point2D(A.x(), A.y()), B, C);
+      a = triangleArea(I, B, C) / total;
+      b = triangleArea(I, A, C) / total;
+      c = triangleArea(I, A, B) / total;
+    }
+
+    std::pair<int, int> compute_x_range(int y, const vec4 &A, const vec4 &B, const vec4 &C)
+    {
+      // compute the intersections between scanline and triangle edges
+      int intersections = 0;
+      if (intersects(y, A, B))
+        intersections |= 1;
+      if (intersects(y, A, C))
+        intersections |= 2;
+      if (intersects(y, B, C))
+        intersections |= 4;
+
+      Real xa, xb;
+      switch (intersections) {
+        case 3:
+          // A-B and A-C intersect scanline
+          xa = intersection(y, A, B);
+          xb = intersection(y, A, C);
+          break;
+        case 5:
+          // A-B and B-C intersect scanline
+          xa = intersection(y, A, B);
+          xb = intersection(y, B, C);
+          break;
+        case 6:
+          // A-C and B-C intersect scanline
+          xb = intersection(y, A, C);
+          xa = intersection(y, B, C);
+          break;
+      }
+
+      if (xa < xb)
+        return std::make_pair(nearest(xa + 0.5), nearest(xb - 0.5));
+      return std::make_pair(nearest(xb + 0.5), nearest(xa - 0.5));
+    }
+
   }
 
   template<typename ProgramType>
@@ -146,28 +211,6 @@ namespace GFX {
       ProgramType& program()
       {
         return m_program;
-      }
-
-      void screenCoordinates(vec4 &v)
-      {
-        Real x = 0;
-        Real y = 0;
-        Real w = m_context.width() / 2.0;
-        Real h = m_context.height() / 2.0;
-        Real n = 0;
-        Real f = 1;
-
-        v.x() = w * v.x() + (x + w);
-        v.y() = h * v.y() + (y + h);
-        v.z() = ((f - n) / 2.0) * v.z() + (f + n) / 2.0;
-      }
-      
-      void perspectiveDivide(vec4 &v)
-      {
-        Real one_over_w = 1.0 / v.w();
-        v.x() *= one_over_w;
-        v.y() *= one_over_w;
-        v.z() *= one_over_w;
       }
 
       void drawLines(const Real *attributes, std::size_t size, std::size_t stride)
@@ -195,8 +238,21 @@ namespace GFX {
           drawTriangle(attributes + i - stride * 3, attributes + i - stride, attributes + i);
         }
       }
-    
+
     private:
+      void screenCoordinates(vec4 &v)
+      {
+        Real x = 0;
+        Real y = 0;
+        Real w = m_context.width() / 2.0;
+        Real h = m_context.height() / 2.0;
+        Real n = 0;
+        Real f = 1;
+
+        v.x() = w * v.x() + (x + w);
+        v.y() = h * v.y() + (y + h);
+        v.z() = ((f - n) / 2.0) * v.z() + (f + n) / 2.0;
+      }
 
       void drawLine(const Real *attributesA, const Real *attributesB)
       {
@@ -242,8 +298,8 @@ namespace GFX {
             m_context.drawPixel(A.x(), i, interpolateLineZ(A.z(), B.z(), i, numY), color);
           }
           return;
-        } 
-        
+        }
+
         if (A.y() == B.y()) {
           // special case for A.y() == B.y()
           int minX = nearest(std::min(A.x(), B.x()));
@@ -262,13 +318,13 @@ namespace GFX {
           }
           return;
         }
-        
+
         if (A.x() > B.x()) {
           // flip points if B.x() > A.x(): we want A.x() to have the lowest value
           std::swap(A, B);
           std::swap(varyingA, varyingB);
         }
-        
+
         Real m = ((Real) B.y() - (Real) A.y()) / ((Real) B.x() - (Real) A.x());
         if (-1.0 <= m && m <= 1.0) {
           int num = B.x() - A.x() + 1;
@@ -312,59 +368,6 @@ namespace GFX {
         }
       }
 
-      bool intersects(Real y, const vec4 &P, const vec4 &Q)
-      {
-        return (P.y() != Q.y()) && ((y - P.y()) * (y - Q.y()) <= 0.0);
-      }
-
-      Real intersection(Real y, const vec4 &P, const vec4 &Q)
-      {
-        return Q.x() + (P.x() - Q.x()) * (y - Q.y()) / (P.y() - Q.y());
-      }
-
-      void barycentricCoeff(const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I, Real &a, Real &b, Real &c)
-      {
-        Real total = triangleArea(Point2D(A.x(), A.y()), B, C);
-        a = triangleArea(I, B, C) / total;
-        b = triangleArea(I, A, C) / total;
-        c = triangleArea(I, A, B) / total;
-      }
-
-      std::pair<int, int> computeXRange(int y, const vec4 &A, const vec4 &B, const vec4 &C)
-      {
-        // compute the intersections between scanline and triangle edges
-        int intersections = 0;
-        if (intersects(y, A, B))
-          intersections |= 1;
-        if (intersects(y, A, C))
-          intersections |= 2;
-        if (intersects(y, B, C))
-          intersections |= 4;
-
-        Real xa, xb;
-        switch (intersections) {
-          case 3:
-            // A-B and A-C intersect scanline
-            xa = intersection(y, A, B);
-            xb = intersection(y, A, C);
-            break;
-          case 5:
-            // A-B and B-C intersect scanline
-            xa = intersection(y, A, B);
-            xb = intersection(y, B, C);
-            break;
-          case 6:
-            // A-C and B-C intersect scanline
-            xb = intersection(y, A, C);
-            xa = intersection(y, B, C);
-            break;
-        }
-
-        if (xa < xb)
-          return std::make_pair(nearest(xa + 0.5), nearest(xb - 0.5));
-        return std::make_pair(nearest(xb + 0.5), nearest(xa - 0.5));
-      }
-
       void drawTriangle(const Real *attributesA, const Real *attributesB, const Real *attributesC)
       {
         // varyings to be filled in by vertex shader
@@ -378,15 +381,15 @@ namespace GFX {
         vec4 C = m_program.vertexShader().exec(attributesC, varyingC);
 
         // perspective divide (clip coordinates -> normalized device coordinates (NDC))
-        perspectiveDivide(A);
-        perspectiveDivide(B);
-        perspectiveDivide(C);
+        impl::perspective_divide(A);
+        impl::perspective_divide(B);
+        impl::perspective_divide(C);
 
         // compute screen coordinates (NDC -> screen coordinates)
         screenCoordinates(A);
         screenCoordinates(B);
         screenCoordinates(C);
-       
+
         // determine y range in screen coordinates
         int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
         int maxY = nearest(std::max(A.y(), std::max(B.y(), C.y())) - 0.5);
@@ -401,20 +404,20 @@ namespace GFX {
 
         for (int y = minY; y <= maxY; ++y) {
           // compute x range in screen coordinates
-          std::pair<int, int> xRange = computeXRange(y, A, B, C);
+          std::pair<int, int> xRange = impl::compute_x_range(y, A, B, C);
           int xL = std::max(xRange.first, 0);
           int xR = std::min(xRange.second, m_context.width() - 1);
 
           for (int x = xL; x <= xR; ++x) {
-            // compute barycontric coefficients for interpolation            
+            // compute barycentric coefficients for interpolation
             Real a, b, c;
-            barycentricCoeff(A, B, C, GFX::Point2D(x, y), a, b, c);
-            
+            impl::barycentric_coeff(A, B, C, GFX::Point2D(x, y), a, b, c);
+
             // interpolate 1/z
             Real z = (1.0 / A.z()) * a + (1.0 / B.z()) * b + (1.0 / C.z()) * c;
-            
+
             // interpolate varyings
-            callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
+            impl::callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
 
             // execute fragment shader
             Color color = m_program.fragmentShader().exec(varying);
@@ -424,7 +427,7 @@ namespace GFX {
           }
         }
       }
-      
+
       Context &m_context;
       ProgramType &m_program;
   };

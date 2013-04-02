@@ -62,7 +62,7 @@ namespace CG {
         } catch (const std::exception &e) {
           std::cerr << "Could not parse color (using default black)" << std::endl;
         }
-        
+
         return img::Color(0, 0, 0);
       }
 
@@ -136,7 +136,7 @@ namespace CG {
                   // move to new position
                   state.pos = newPos;
                 }
-                break;                
+                break;
             }
           }
         }
