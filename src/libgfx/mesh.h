@@ -151,6 +151,8 @@ namespace GFX {
        */
       void computeNormals();
 
+      void triangulate();
+
       std::vector<Real> triangleAttributes(bool normals = false, bool colors = false, bool texCoords = false);
 
       std::vector<Real> quadAttributes(bool normals = false, bool colors = false, bool texCoords = false);

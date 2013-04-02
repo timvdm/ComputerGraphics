@@ -47,6 +47,28 @@ namespace GFX {
     }
   }
 
+  void Mesh::triangulate()
+  {
+    //std::vector<Face> newFaces;
+
+    std::size_t numFaces = m_faces.size();
+    for (std::size_t i = 0; i < numFaces; ++i) {
+      Face face = m_faces[i];
+      if (face.size() <= 3)
+        continue;
+
+      //for (std::size_t j = 1; j < face.size() - 1; ++j)
+      //  newFaces.push_back(make_face(face[0], face[j], face[j + 1]));
+      for (std::size_t j = 1; j < face.size() - 1; ++j)
+        if (j == 1)
+          m_faces[i] = make_face(face[0], face[j], face[j + 1]);
+        else
+          m_faces.push_back(make_face(face[0], face[j], face[j + 1]));
+    }
+
+    //m_faces = newFaces;
+  }
+
   std::vector<Real> Mesh::triangleAttributes(bool normals, bool colors, bool texCoords)
   {
     std::vector<Real> attr;
@@ -188,7 +210,7 @@ namespace GFX {
     mesh->addFace(1, 2, 5);
     mesh->addFace(2, 3, 5);
     mesh->addFace(3, 0, 5);
-    mesh->addFace(2, 0, 4);
+    mesh->addFace(1, 0, 4);
     mesh->addFace(2, 1, 4);
     mesh->addFace(3, 2, 4);
     mesh->addFace(0, 3, 4);
