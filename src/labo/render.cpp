@@ -132,17 +132,24 @@ struct Ctx
     zBuffer.clear(std::numeric_limits<double>::max());
   }
 
-  img::EasyImage image;
-  GFX::Buffer<double> zBuffer;
-
   void drawPixel(int x, int y, double z, const Color &color)
   {
-    if (zBuffer(x, y) > z) {
+    if (z < zBuffer(x, y)) {
       image(x, y) = img::Color(color.r, color.g, color.b);
       zBuffer(x, y) = z;
     }
   }
+
+  img::EasyImage image;
+  GFX::Buffer<double> zBuffer;
 };
+
+void draw_pixel(Ctx &ctx, int x, int y, double z0, double z1, double i, double a, const Color &color)
+{
+  double p = i / a;
+  double z = p / z1 + (1.0 - p) / z0;
+  ctx.drawPixel(x, y, z, color);
+}
 
 void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color &color)
 {
@@ -150,10 +157,10 @@ void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color 
     // special case for p1.x == p2.x
     int minY = nearest(std::min(p1.y, p2.y));
     int maxY = nearest(std::max(p1.y, p2.y));
-    int numY = maxY - minY + 1;
+    int numY = maxY - minY;
 
     for (int i = minY; i <= maxY; ++i)
-      ctx.drawPixel(p1.x, i, interpolateLineZ(p1.z, p2.z, i, numY), color);
+      draw_pixel(ctx, p1.x, i, p1.z, p2.z, i, numY, color);
     return;
   } 
 
@@ -161,48 +168,48 @@ void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color 
     // special case for p1.y == p2.y
     int minX = nearest(std::min(p1.x, p2.x));
     int maxX = nearest(std::max(p1.x, p2.x));
-    int numX = maxX - minX + 1;
+    int numX = maxX - minX;
 
     for (int i = minX; i <= maxX; ++i)
-      ctx.drawPixel(i, p1.y, interpolateLineZ(p1.z, p2.z, i, numX), color);
+      draw_pixel(ctx, i, p1.y, p1.z, p2.z, i, numX, color);
     return;
   }
 
   int x0 = p1.x;
   int y0 = p1.y;
-  int z0 = p1.z;
+  double z0 = p1.z;
   int x1 = p2.x;
   int y1 = p2.y;
-  int z1 = p2.z;
+  double z1 = p2.z;
 
   if (p1.x > p2.x) {
     // flip points if p2.x > p1.x: we want p1.x to have the lowest value
     std::swap(x0, x1);
     std::swap(y0, y1);
-    std::swap(z0, z1);
+    //std::swap(z0, z1);
   }
 
   double m = ((double) y1 - (double) y0) / ((double) x1 - (double) x0);
   if (-1.0 <= m && m <= 1.0) {
-    int num = x1 - x0 + 1;
+    int num = x1 - x0;
     for (int i = 0; i <= (x1 - x0); ++i) {
       int x = x0 + i;
       int y = round(y0 + m * i);
-      ctx.drawPixel(x, y, interpolateLineZ(1.0 / z0, 1.0 / z1, i, num), color);
+      draw_pixel(ctx, x, y, z0, z1, i, num, color);
     }
   } else if (m > 1.0) {
-    int num = y1 - y0 + 1;
+    int num = y1 - y0;
     for (int i = 0; i <= (y1 - y0); ++i) {
       int x = round(x0 + i / m);
       int y = y0 + i;
-      ctx.drawPixel(x, y, interpolateLineZ(1.0 / z0, 1.0 / z1, i, num), color);
+      draw_pixel(ctx, x, y, z0, z1, i, num, color);
     }
   } else if (m < -1.0) {
-    int num = y0 - y1 + 1;
+    int num = y0 - y1;
     for (int i = 0; i <= (y0 - y1); ++i) {
       int x = round(x0 - i / m);
       int y = y0 - i;
-      ctx.drawPixel(x, y, interpolateLineZ(1.0 / z0, 1.0 / z1, i, num), color);
+      draw_pixel(ctx, x, y, z0, z1, i, num, color);
     }
   }
 }
@@ -281,6 +288,8 @@ void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 
 
       GFX::Point3D projP1(p1.x() / -p1.z(), p1.y() / -p1.z(), p1.z());
       GFX::Point3D projP2(p2.x() / -p2.z(), p2.y() / -p2.z(), p2.z());
+      
+      //std::cout << "z1 = " << projP1.z << ", z2 = " << projP2.z << std::endl;
 
       lines.push_back(GFX::Line3D(projP1, projP2, color));
     }

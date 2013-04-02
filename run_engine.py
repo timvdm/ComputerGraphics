@@ -3,6 +3,6 @@
 import glob
 import os
 
-for f in glob.glob('*.ini'):
+for f in sorted(glob.glob('*.ini')):
     print 'Running ' + f + '...'
     os.system('./engine ' + f)

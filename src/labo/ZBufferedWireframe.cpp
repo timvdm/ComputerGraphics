@@ -22,7 +22,7 @@ namespace CG {
         } catch (const std::exception &e) {
           std::cerr << "Could not parse color (using default black)" << std::endl;
         }
-        
+
         return GFX::Color(0, 0, 0);
       }
 
@@ -48,9 +48,9 @@ namespace CG {
 
         return m;
       }
-      
+
       bool renderLineDrawing(const std::string &figureName, const ini::Configuration &conf,
-          GFX::Lines2D &lines, const GFX::mat4 &T)
+          GFX::Lines3D &lines, const GFX::mat4 &T)
       {
         int nrPoints;
         int nrLines;
@@ -99,9 +99,9 @@ namespace CG {
           std::cerr << e.what() << std::endl;
           return img::EasyImage();
         }
-        
+
         GFX::mat4 project = GFX::projectionMatrix(eye[0], eye[1], eye[2]);
-        
+
         GFX::Lines3D lines;
 
         for (int i = 0; i < nrFigures; ++i) {
@@ -110,53 +110,53 @@ namespace CG {
           try {
             std::string type = conf[figureName]["type"].as_string_or_die();
             GFX::Color color = extractColor(conf[figureName]["color"]);
-        
+
             GFX::mat4 model = modelMatrix(figureName, conf);
 
             if (type == "LineDrawing") {
 
-              //if (!renderLineDrawing(figureName, conf, lines, project * model))
-              //  return img::EasyImage();
+              if (!renderLineDrawing(figureName, conf, lines, project * model))
+                return img::EasyImage();
 
             } else if (type == "Cube") {
-              
+
               renderMesh(*GFX::Mesh::cube(), color, project * model, lines);
 
             } else if (type == "Tetrahedron") {
-              
+
               renderMesh(*GFX::Mesh::tetrahedron(), color, project * model, lines);
 
             } else if (type == "Octahedron") {
-              
+
               renderMesh(*GFX::Mesh::octahedron(), color, project * model, lines);
 
             } else if (type == "Icosahedron") {
-              
+
               renderMesh(*GFX::Mesh::icosahedron(), color, project * model, lines);
 
             } else if (type == "Dodecahedron") {
-              
+
               renderMesh(*GFX::Mesh::dodecahedron(), color, project * model, lines);
 
             } else if (type == "Cone") {
-              
+
               int n = conf[figureName]["n"];
               double h = conf[figureName]["height"];
               renderMesh(*GFX::Mesh::cone(n, h), color, project * model, lines);
 
             } else if (type == "Cylinder") {
-              
+
               int n = conf[figureName]["n"];
               double h = conf[figureName]["height"];
               renderMesh(*GFX::Mesh::cylinder(n, h), color, project * model, lines);
 
             } else if (type == "Sphere") {
-              
+
               int n = conf[figureName]["n"];
               renderMesh(*GFX::Mesh::sphere(n), color, project * model, lines);
 
             } else if (type == "Torus") {
-              
+
               int n = conf[figureName]["n"];
               int m = conf[figureName]["m"];
               double R = conf[figureName]["R"];

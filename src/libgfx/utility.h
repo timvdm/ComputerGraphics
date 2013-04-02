@@ -38,7 +38,8 @@ namespace GFX {
    */
   inline double interpolateLineZ(double zA, double zB, double step, double numSteps)
   {
-    return (step / numSteps) / zA + (1.0 - step / numSteps) / zB;
+    double p = step / numSteps;
+    return p / zA + (1.0 - p) / zB;
   }
 
   /**
