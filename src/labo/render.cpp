@@ -106,7 +106,7 @@ img::EasyImage draw_lines(Lines2D &lines, int size, const img::Color &bgColor)
   // compute some properties for the lines
   std::pair<Point2D, Point2D> minMax = get_min_max(lines);
   std::pair<int, int> imageSizes = get_image_sizes(minMax, size);
-  double d = get_scale_factor(minMax, imageSizes.first);
+  Real d = get_scale_factor(minMax, imageSizes.first);
   Point2D center = get_center(minMax, d);
 
   // scale the lines
@@ -129,10 +129,10 @@ struct Ctx
 {
   Ctx(int width, int height, const img::Color &bgColor) : image(width, height, bgColor), zBuffer(width, height)
   {
-    zBuffer.clear(std::numeric_limits<double>::max());
+    zBuffer.clear(std::numeric_limits<Real>::max());
   }
 
-  void drawPixel(int x, int y, double z, const Color &color)
+  void drawPixel(int x, int y, Real z, const Color &color)
   {
     if (z < zBuffer(x, y)) {
       image(x, y) = img::Color(color.r, color.g, color.b);
@@ -141,13 +141,13 @@ struct Ctx
   }
 
   img::EasyImage image;
-  GFX::Buffer<double> zBuffer;
+  GFX::Buffer<Real> zBuffer;
 };
 
-void draw_pixel(Ctx &ctx, int x, int y, double z0, double z1, double i, double a, const Color &color)
+void draw_pixel(Ctx &ctx, int x, int y, Real z0, Real z1, Real i, Real a, const Color &color)
 {
-  double p = i / a;
-  double z = p / z1 + (1.0 - p) / z0;
+  Real p = i / a;
+  Real z = p / z1 + (1.0 - p) / z0;
   ctx.drawPixel(x, y, z, color);
 }
 
@@ -177,10 +177,10 @@ void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color 
 
   int x0 = p1.x;
   int y0 = p1.y;
-  double z0 = p1.z;
+  Real z0 = p1.z;
   int x1 = p2.x;
   int y1 = p2.y;
-  double z1 = p2.z;
+  Real z1 = p2.z;
 
   if (p1.x > p2.x) {
     // flip points if p2.x > p1.x: we want p1.x to have the lowest value
@@ -189,7 +189,7 @@ void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color 
     //std::swap(z0, z1);
   }
 
-  double m = ((double) y1 - (double) y0) / ((double) x1 - (double) x0);
+  Real m = ((Real) y1 - (Real) y0) / ((Real) x1 - (Real) x0);
   if (-1.0 <= m && m <= 1.0) {
     int num = x1 - x0;
     for (int i = 0; i <= (x1 - x0); ++i) {
@@ -220,7 +220,7 @@ img::EasyImage draw_zbuffered_lines(GFX::Lines3D &lines, int size, const img::Co
   // compute some properties for the lines
   std::pair<Point2D, Point2D> minMax = get_min_max(lines);
   std::pair<int, int> imageSizes = get_image_sizes(minMax, size);
-  double d = get_scale_factor(minMax, imageSizes.first);
+  Real d = get_scale_factor(minMax, imageSizes.first);
   Point2D center = get_center(minMax, d);
 
   // scale the lines
@@ -229,11 +229,6 @@ img::EasyImage draw_zbuffered_lines(GFX::Lines3D &lines, int size, const img::Co
   center_lines(lines, imageSizes, center);
 
   Ctx ctx(imageSizes.first, imageSizes.second, bgColor);
-  /*
-  ctx.image = img::EasyImage(imageSizes.first, imageSizes.second, bgColor);
-  ctx.zBuffer = GFX::Buffer<double>(imageSizes.first, imageSizes.second, bgColor);
-  ctx.zBuffer.clear(std::numeric_limits<double>::max());
-  */
   
   // draw the lines
   for (std::size_t i = 0; i < lines.size(); ++i) {

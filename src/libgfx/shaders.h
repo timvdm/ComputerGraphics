@@ -29,17 +29,17 @@ namespace GFX {
       return vec2(v.x(), v.y());
     }
 
-    inline vec4 vec2to4(const vec2 &v, double z, double w)
+    inline vec4 vec2to4(const vec2 &v, Real z, Real w)
     {
       return vec4(v.x(), v.y(), z, w);
     }
 
-    inline vec4 vec3to4(const vec3 &v, double w)
+    inline vec4 vec3to4(const vec3 &v, Real w)
     {
       return vec4(v.x(), v.y(), v.z(), w);
     }
 
-    inline vec3 vec2to3(const vec2 &v, double z)
+    inline vec3 vec2to3(const vec2 &v, Real z)
     {
       return vec3(v.x(), v.y(), z);
     }
@@ -48,7 +48,7 @@ namespace GFX {
      * @name Angle & Trigonometry Functions
      *
      * Component-wise operation. Parameters specified as angle are assumed to
-     * be in units of radians. T is double, vec2, vec3, vec4.
+     * be in units of radians. T is Real, vec2, vec3, vec4.
      */
     //@{
 
@@ -300,7 +300,7 @@ namespace GFX {
     /**
      * @name Exponential Functions
      *
-     * Component-wise operation. T is double, vec2, vec3, vec4.
+     * Component-wise operation. T is Real, vec2, vec3, vec4.
      */
     //@{
 
@@ -498,7 +498,7 @@ namespace GFX {
     /**
      * @name Common Functions
      *
-     * Component-wise operation. T is double, vec2, vec3, vec4.
+     * Component-wise operation. T is Real, vec2, vec3, vec4.
      */
     //@{
 
@@ -536,24 +536,24 @@ namespace GFX {
      * @brief Dot product.
      */
     template<typename T>
-    double dot(const T &x, const T &y)
+    Real dot(const T &x, const T &y)
     {
       return x * y;
     }
 
     //@cond IMPL
     template<>
-    double dot<vec2>(const vec2 &x, const vec2 &y)
+    Real dot<vec2>(const vec2 &x, const vec2 &y)
     {
       return x.dot(y);
     }
     template<>
-    double dot<vec3>(const vec3 &x, const vec3 &y)
+    Real dot<vec3>(const vec3 &x, const vec3 &y)
     {
       return x.dot(y);
     }
     template<>
-    double dot<vec4>(const vec4 &x, const vec4 &y)
+    Real dot<vec4>(const vec4 &x, const vec4 &y)
     {
       return x.dot(y);
     }

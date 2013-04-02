@@ -32,7 +32,7 @@ namespace GFX {
         return m_textures[0].height();
       }
 
-      const Color& operator()(double u, double v) const
+      const Color& operator()(Real u, Real v) const
       {
         int x = static_cast<int>(u * m_textures[0].width()) % m_textures[0].width();
         int y = static_cast<int>(v * m_textures[0].height()) % m_textures[0].height();

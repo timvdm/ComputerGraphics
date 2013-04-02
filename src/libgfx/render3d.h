@@ -18,23 +18,23 @@ namespace GFX {
    *
    * @return The interpolated color.
    */
-  double triangleArea(const Point2D &A, const vec4 &B, const vec4 &C)
+  Real triangleArea(const Point2D &A, const vec4 &B, const vec4 &C)
   {
     // shoelace or surveyor's formula
     return 0.5 * std::abs((A.x - C.x()) * (B.y() - A.y) - (A.x - B.x()) * (C.y() - A.y));
   }
 
-  double distance(double x0, double y0, double x1, double y1)
+  Real distance(Real x0, Real y0, Real x1, Real y1)
   {
-    double dx = x1 - x0;
-    double dy = y1 - y0;
+    Real dx = x1 - x0;
+    Real dy = y1 - y0;
     return std::sqrt(dx * dx + dy * dy);
   }
 
   Color interpolateVarying(const Color &cA, const Color &cB, const vec4 &A, const vec4 &B, const Point2D &I)
   {
-    double a = distance(B.x(), B.y(), I.x, I.y) / distance(A.x(), A.y(), B.x(), B.y());
-    double b = 1.0 - a;
+    Real a = distance(B.x(), B.y(), I.x, I.y) / distance(A.x(), A.y(), B.x(), B.y());
+    Real b = 1.0 - a;
     return Color(cA.r * a + cB.r * b, cA.g * a + cB.g * b, cA.b * a + cB.b * b);
   }
 
@@ -73,7 +73,7 @@ namespace GFX {
    */
   Color interpolateVarying(const Color &cA, const Color &cB, const Color &cC,
                            const vec4 &A, const vec4 &B, const vec4 &C,
-                           double a, double b, double c)
+                           Real a, Real b, Real c)
   {
     return Color(cA.r * a + cB.r * b + cC.r * c,
                  cA.g * a + cB.g * b + cC.g * c,
@@ -82,21 +82,21 @@ namespace GFX {
 
   TexCoord interpolateVarying(const TexCoord &uvA, const TexCoord &uvB, const TexCoord &uvC,
                               const vec4 &A, const vec4 &B, const vec4 &C,
-                              double a, double b, double c)
+                              Real a, Real b, Real c)
   {
-    double one_over_wA = 1.0 / A.w();
-    double one_over_wB = 1.0 / B.w();
-    double one_over_wC = 1.0 / C.w();
+    Real one_over_wA = 1.0 / A.w();
+    Real one_over_wB = 1.0 / B.w();
+    Real one_over_wC = 1.0 / C.w();
 
-    double u_over_wA = uvA.u * one_over_wA;
-    double u_over_wB = uvB.u * one_over_wB;
-    double u_over_wC = uvC.u * one_over_wC;
+    Real u_over_wA = uvA.u * one_over_wA;
+    Real u_over_wB = uvB.u * one_over_wB;
+    Real u_over_wC = uvC.u * one_over_wC;
 
-    double v_over_wA = uvA.v * one_over_wA;
-    double v_over_wB = uvB.v * one_over_wB;
-    double v_over_wC = uvC.v * one_over_wC;
+    Real v_over_wA = uvA.v * one_over_wA;
+    Real v_over_wB = uvB.v * one_over_wB;
+    Real v_over_wC = uvC.v * one_over_wC;
 
-    double one_over_w = one_over_wA * a + one_over_wB * b + one_over_wC * c;
+    Real one_over_w = one_over_wA * a + one_over_wB * b + one_over_wC * c;
 
     return TexCoord((u_over_wA * a + u_over_wB * b + u_over_wC * c) / one_over_w,
                     (v_over_wA * a + v_over_wB * b + v_over_wC * c) / one_over_w);
@@ -107,7 +107,7 @@ namespace GFX {
    */
   vec4 interpolateVarying(const vec4 &nA, const vec4 &nB, const vec4 &nC,
                           const vec4 &A, const vec4 &B, const vec4 &C,
-                          double a, double b, double c)
+                          Real a, Real b, Real c)
   {
     return nA;
   }
@@ -115,14 +115,14 @@ namespace GFX {
   template<int I = 0, typename... Tp>
   typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
       const std::tuple<Tp...>&, const std::tuple<Tp...>&, const std::tuple<Tp...>&,
-      const vec4&, const vec4&, const vec4&, double, double, double, std::tuple<Tp...>&)
+      const vec4&, const vec4&, const vec4&, Real, Real, Real, std::tuple<Tp...>&)
   {
   }
 
   template<int I = 0, typename... Tp>
   typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
       const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB, const std::tuple<Tp...> &varyingC,
-      const vec4 &A, const vec4 &B, const vec4 &C, double a, double b, double c, std::tuple<Tp...> &varying)
+      const vec4 &A, const vec4 &B, const vec4 &C, Real a, Real b, Real c, std::tuple<Tp...> &varying)
   {
     std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), std::get<I>(varyingC), A, B, C, a, b, c);
     callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
@@ -150,12 +150,12 @@ namespace GFX {
 
       void screenCoordinates(vec4 &v)
       {
-        double x = 0;
-        double y = 0;
-        double w = m_context.width() / 2.0;
-        double h = m_context.height() / 2.0;
-        double n = 0;
-        double f = 1;
+        Real x = 0;
+        Real y = 0;
+        Real w = m_context.width() / 2.0;
+        Real h = m_context.height() / 2.0;
+        Real n = 0;
+        Real f = 1;
 
         v.x() = w * v.x() + (x + w);
         v.y() = h * v.y() + (y + h);
@@ -164,13 +164,13 @@ namespace GFX {
       
       void perspectiveDivide(vec4 &v)
       {
-        double one_over_w = 1.0 / v.w();
+        Real one_over_w = 1.0 / v.w();
         v.x() *= one_over_w;
         v.y() *= one_over_w;
         v.z() *= one_over_w;
       }
 
-      void drawLines(const double *attributes, std::size_t size, std::size_t stride)
+      void drawLines(const Real *attributes, std::size_t size, std::size_t stride)
       {
         assert((size % (stride * 2)) == 0);
 
@@ -178,7 +178,7 @@ namespace GFX {
           drawLine(attributes + i - stride, attributes + i);
       }
 
-      void drawTriangles(const double *attributes, std::size_t size, std::size_t stride)
+      void drawTriangles(const Real *attributes, std::size_t size, std::size_t stride)
       {
         assert((size % (stride * 3)) == 0);
 
@@ -186,7 +186,7 @@ namespace GFX {
           drawTriangle(attributes + i - stride * 2, attributes + i - stride, attributes + i);
       }
 
-      void drawQuads(const double *attributes, std::size_t size, std::size_t stride)
+      void drawQuads(const Real *attributes, std::size_t size, std::size_t stride)
       {
         assert((size % (stride * 4)) == 0);
 
@@ -198,7 +198,7 @@ namespace GFX {
     
     private:
 
-      void drawLine(const double *attributesA, const double *attributesB)
+      void drawLine(const Real *attributesA, const Real *attributesB)
       {
         varying_type varyingA;
         varying_type varyingB;
@@ -269,7 +269,7 @@ namespace GFX {
           std::swap(varyingA, varyingB);
         }
         
-        double m = ((double) B.y() - (double) A.y()) / ((double) B.x() - (double) A.x());
+        Real m = ((Real) B.y() - (Real) A.y()) / ((Real) B.x() - (Real) A.x());
         if (-1.0 <= m && m <= 1.0) {
           int num = B.x() - A.x() + 1;
           for (int i = 0; i <= (B.x() - A.x()); ++i) {
@@ -312,19 +312,19 @@ namespace GFX {
         }
       }
 
-      bool intersects(double y, const vec4 &P, const vec4 &Q)
+      bool intersects(Real y, const vec4 &P, const vec4 &Q)
       {
         return (P.y() != Q.y()) && ((y - P.y()) * (y - Q.y()) <= 0.0);
       }
 
-      double intersection(double y, const vec4 &P, const vec4 &Q)
+      Real intersection(Real y, const vec4 &P, const vec4 &Q)
       {
         return Q.x() + (P.x() - Q.x()) * (y - Q.y()) / (P.y() - Q.y());
       }
 
-      void barycentricCoeff(const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I, double &a, double &b, double &c)
+      void barycentricCoeff(const vec4 &A, const vec4 &B, const vec4 &C, const Point2D &I, Real &a, Real &b, Real &c)
       {
-        double total = triangleArea(Point2D(A.x(), A.y()), B, C);
+        Real total = triangleArea(Point2D(A.x(), A.y()), B, C);
         a = triangleArea(I, B, C) / total;
         b = triangleArea(I, A, C) / total;
         c = triangleArea(I, A, B) / total;
@@ -341,7 +341,7 @@ namespace GFX {
         if (intersects(y, B, C))
           intersections |= 4;
 
-        double xa, xb;
+        Real xa, xb;
         switch (intersections) {
           case 3:
             // A-B and A-C intersect scanline
@@ -365,7 +365,7 @@ namespace GFX {
         return std::make_pair(nearest(xb + 0.5), nearest(xa - 0.5));
       }
 
-      void drawTriangle(const double *attributesA, const double *attributesB, const double *attributesC)
+      void drawTriangle(const Real *attributesA, const Real *attributesB, const Real *attributesC)
       {
         // varyings to be filled in by vertex shader
         varying_type varyingA;
@@ -407,11 +407,11 @@ namespace GFX {
 
           for (int x = xL; x <= xR; ++x) {
             // compute barycontric coefficients for interpolation            
-            double a, b, c;
+            Real a, b, c;
             barycentricCoeff(A, B, C, GFX::Point2D(x, y), a, b, c);
             
             // interpolate 1/z
-            double z = (1.0 / A.z()) * a + (1.0 / B.z()) * b + (1.0 / C.z()) * c;
+            Real z = (1.0 / A.z()) * a + (1.0 / B.z()) * b + (1.0 / C.z()) * c;
             
             // interpolate varyings
             callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);

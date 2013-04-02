@@ -18,7 +18,7 @@ namespace GFX {
    *
    * @return The nearest integer value.
    */
-  inline int nearest(double value)
+  inline int nearest(Real value)
   {
     return (value < 0.0) ? value - 0.5 : value + 0.5;
   }
@@ -36,9 +36,9 @@ namespace GFX {
    *
    * @return The interpolated Z-buffer value for the intermediate point.
    */
-  inline double interpolateLineZ(double zA, double zB, double step, double numSteps)
+  inline Real interpolateLineZ(Real zA, Real zB, Real step, Real numSteps)
   {
-    double p = step / numSteps;
+    Real p = step / numSteps;
     return p / zA + (1.0 - p) / zB;
   }
 
@@ -49,12 +49,12 @@ namespace GFX {
    *
    * @return The 2D coordinates for the projected vertex.
    */
-  inline Point2D project(const vec4 &v, double d)
+  inline Point2D project(const vec4 &v, Real d)
   {
     return Point2D(-(d * v.x()) / v.z(), -(d * v.y()) / v.z());
   }
 
-  inline double deg2rad(double angle)
+  inline Real deg2rad(Real angle)
   {
     return angle * M_PI / 180.0;
   }

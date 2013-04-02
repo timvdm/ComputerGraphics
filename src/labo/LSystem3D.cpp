@@ -33,7 +33,7 @@ namespace CG {
 
   bool LSystem3D::processCommand(char command, const LParser::LSystem3D &lSystem, LSystemState &state)
   {
-    double delta = GFX::deg2rad(lSystem.get_angle());
+    GFX::Real delta = GFX::deg2rad(lSystem.get_angle());
 
     switch (command) {
       case '+':

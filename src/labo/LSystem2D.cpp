@@ -68,7 +68,7 @@ namespace CG {
 
       struct LSystemState
       {
-        LSystemState(double startingAngle) : angle(startingAngle)
+        LSystemState(GFX::Real startingAngle) : angle(startingAngle)
         {
         }
 
@@ -84,9 +84,9 @@ namespace CG {
           stack.pop_back();
         }
 
-        double angle;
+        GFX::Real angle;
         GFX::Point2D pos;
-        std::vector<std::pair<double, GFX::Point2D> > stack;
+        std::vector<std::pair<GFX::Real, GFX::Point2D> > stack;
       };
 
       void drawLSystem(const LParser::LSystem2D &lSystem, const std::string &commands, GFX::Lines2D &lines, int iteration, LSystemState &state)

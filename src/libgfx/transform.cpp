@@ -5,16 +5,16 @@
 
 namespace GFX {
 
-  mat4 projectionMatrix(double x, double y, double z)
+  mat4 projectionMatrix(Real x, Real y, Real z)
   {
     SphereCoord eye(vec3(x, y, z));
 
     mat4 m(mat4::Identity());
 
-    double st = std::sin(eye.theta);
-    double ct = std::cos(eye.theta);
-    double sp = std::sin(eye.phi);
-    double cp = std::cos(eye.phi);
+    Real st = std::sin(eye.theta);
+    Real ct = std::cos(eye.theta);
+    Real sp = std::sin(eye.phi);
+    Real cp = std::cos(eye.phi);
 
     m(0, 0) = - st;
     m(1, 0) = - ct * cp;
@@ -29,7 +29,7 @@ namespace GFX {
     return m;
   }
 
-  mat4 orthoMatrix(double l, double r, double t,  double b, double n, double f)
+  mat4 orthoMatrix(Real l, Real r, Real t,  Real b, Real n, Real f)
   {
     mat4 m(mat4::Identity());
 
@@ -43,7 +43,7 @@ namespace GFX {
     return m;
   }
 
-  mat4 frustumMatrix(double l, double r, double t, double b, double n, double f)
+  mat4 frustumMatrix(Real l, Real r, Real t, Real b, Real n, Real f)
   {
     mat4 m;
 
@@ -70,11 +70,11 @@ namespace GFX {
     return m;
   }
 
-  mat4 perspectiveMatrix(double fovY, double aspect, double n, double f)
+  mat4 perspectiveMatrix(Real fovY, Real aspect, Real n, Real f)
   {
     mat4 m(mat4::Zero());
 
-    double c = std::cos(fovY / 2.0) / std::sin(fovY / 2.0);
+    Real c = std::cos(fovY / 2.0) / std::sin(fovY / 2.0);
 
     m(0, 0) = c / aspect;
     m(1, 1) = c;
@@ -85,9 +85,9 @@ namespace GFX {
     return m;
   }
 
-  mat4 lookAtMatrix(double eyeX,    double eyeY,    double eyeZ,
-                    double centerX, double centerY, double centerZ,
-                    double upX,     double upY,     double upZ)
+  mat4 lookAtMatrix(Real eyeX,    Real eyeY,    Real eyeZ,
+                    Real centerX, Real centerY, Real centerZ,
+                    Real upX,     Real upY,     Real upZ)
   {
     mat4 m;
 
@@ -121,7 +121,7 @@ namespace GFX {
     return m;
   }
 
-  mat4 translationMatrix(double x, double y, double z)
+  mat4 translationMatrix(Real x, Real y, Real z)
   {
     mat4 m(mat4::Identity());
 
@@ -132,12 +132,12 @@ namespace GFX {
     return m;
   }
 
-  mat4 xRotationMatrix(double angle)
+  mat4 xRotationMatrix(Real angle)
   {
     mat4 m(mat4::Identity());
 
-    double c = std::cos(angle);
-    double s = std::sin(angle);
+    Real c = std::cos(angle);
+    Real s = std::sin(angle);
 
     m(1, 1) =  c;
     m(2, 1) = -s;
@@ -147,12 +147,12 @@ namespace GFX {
     return m;
   }
 
-  mat4 yRotationMatrix(double angle)
+  mat4 yRotationMatrix(Real angle)
   {
     mat4 m(mat4::Identity());
 
-    double c = std::cos(angle);
-    double s = std::sin(angle);
+    Real c = std::cos(angle);
+    Real s = std::sin(angle);
 
     m(0, 0) =  c;
     m(2, 0) =  s;
@@ -162,12 +162,12 @@ namespace GFX {
     return m;
   }
 
-  mat4 zRotationMatrix(double angle)
+  mat4 zRotationMatrix(Real angle)
   {
     mat4 m(mat4::Identity());
 
-    double c = std::cos(angle);
-    double s = std::sin(angle);
+    Real c = std::cos(angle);
+    Real s = std::sin(angle);
 
     m(0, 0) =  c;
     m(1, 0) = -s;
@@ -177,7 +177,7 @@ namespace GFX {
     return m;
   }
 
-  mat4 rotationMatrix(double angle, double x, double y, double z)
+  mat4 rotationMatrix(Real angle, Real x, Real y, Real z)
   {
     vec3 axis(x, y, z);
     axis.normalize();
@@ -186,12 +186,12 @@ namespace GFX {
     y = axis.y();
     z = axis.z();
 
-    double c = std::cos(angle);
-    double s = std::sin(angle);
+    Real c = std::cos(angle);
+    Real s = std::sin(angle);
 
-    double xs = x * s;
-    double ys = y * s;
-    double zs = z * s;
+    Real xs = x * s;
+    Real ys = y * s;
+    Real zs = z * s;
 
     mat4 m(mat4::Identity());
 
@@ -208,7 +208,7 @@ namespace GFX {
     return m;
   }
 
-  mat4 scaleMatrix(double factor)
+  mat4 scaleMatrix(Real factor)
   {
     mat4 m(mat4::Identity());
 
@@ -219,7 +219,7 @@ namespace GFX {
     return m;
   }
 
-  mat4 scaleMatrix(double x, double y, double z)
+  mat4 scaleMatrix(Real x, Real y, Real z)
   {
     mat4 m(mat4::Identity());
 

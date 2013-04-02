@@ -31,12 +31,12 @@ namespace GFX {
     {
     }
 
-    TexCoord(double u_, double v_) : u(u_), v(v_)
+    TexCoord(Real u_, Real v_) : u(u_), v(v_)
     {
     }
 
-    double u;
-    double v;
+    Real u;
+    Real v;
   };
 
 }

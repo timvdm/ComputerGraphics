@@ -22,7 +22,7 @@ namespace GFX {
    *
    * @return The projection matrix.
    */
-  mat4 projectionMatrix(double x, double y, double z);
+  mat4 projectionMatrix(Real x, Real y, Real z);
 
   /**
    * @brief Orthographic projection matrix.
@@ -38,9 +38,9 @@ namespace GFX {
    *
    * @return The projection matrix.
    */
-   mat4 orthoMatrix(double left, double right,
-                    double top,  double bottom,
-                    double near, double far);
+   mat4 orthoMatrix(Real left, Real right,
+                    Real top,  Real bottom,
+                    Real near, Real far);
 
   /**
    * @brief Perspective projection matrix specifying a view frustum.
@@ -56,9 +56,9 @@ namespace GFX {
    *
    * @return The projection matrix.
    */
-   mat4 frustumMatrix(double left, double right,
-                      double top,  double bottom,
-                      double near, double far);
+   mat4 frustumMatrix(Real left, Real right,
+                      Real top,  Real bottom,
+                      Real near, Real far);
 
   /**
    * @brief Perspective projection matrix specifying a view frustum.
@@ -72,7 +72,7 @@ namespace GFX {
    *
    * @return The projection matrix.
    */
-  mat4 perspectiveMatrix(double fovY, double aspect, double near, double far);
+  mat4 perspectiveMatrix(Real fovY, Real aspect, Real near, Real far);
 
   //@}
 
@@ -96,25 +96,25 @@ namespace GFX {
    *
    * @return The look at matrix.
    */
-  mat4 lookAtMatrix(double eyeX,    double eyeY,    double eyeZ,
-                    double centerX, double centerY, double centerZ,
-                    double upX,     double upY,     double upZ);
+  mat4 lookAtMatrix(Real eyeX,    Real eyeY,    Real eyeZ,
+                    Real centerX, Real centerY, Real centerZ,
+                    Real upX,     Real upY,     Real upZ);
 
   //@}
 
   //! @name Modeling Matrices
   //@{
 
-  mat4 translationMatrix(double x, double y, double z);
+  mat4 translationMatrix(Real x, Real y, Real z);
 
-  mat4 xRotationMatrix(double angle);
-  mat4 yRotationMatrix(double angle);
-  mat4 zRotationMatrix(double angle);
+  mat4 xRotationMatrix(Real angle);
+  mat4 yRotationMatrix(Real angle);
+  mat4 zRotationMatrix(Real angle);
 
-  mat4 rotationMatrix(double angle, double x, double y, double z);
+  mat4 rotationMatrix(Real angle, Real x, Real y, Real z);
 
-  mat4 scaleMatrix(double factor);
-  mat4 scaleMatrix(double x, double y, double z);
+  mat4 scaleMatrix(Real factor);
+  mat4 scaleMatrix(Real x, Real y, Real z);
 
   //@}
 

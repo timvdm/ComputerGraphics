@@ -33,12 +33,12 @@ namespace GFX {
         return m_height;
       }
 
-      double near() const
+      Real near() const
       {
         return m_near;
       }
 
-      void setNear(double near)
+      void setNear(Real near)
       {
         m_near = near;
       }
@@ -68,19 +68,19 @@ namespace GFX {
         return m_colorBuffer;
       }
 
-      const Buffer<double>& zBuffer() const
+      const Buffer<Real>& zBuffer() const
       {
         return m_zBuffer;
       }
 
-      Buffer<double>& zBuffer()
+      Buffer<Real>& zBuffer()
       {
         return m_zBuffer;
       }
 
       void clearZBuffer()
       {
-        m_zBuffer.clear(std::numeric_limits<double>::max());
+        m_zBuffer.clear(std::numeric_limits<Real>::max());
       }
 
       void clearColorBuffer(const Color &color = Color::black())
@@ -88,7 +88,7 @@ namespace GFX {
         m_colorBuffer.clear(color);
       }
 
-      void drawPixel(int x, int y, double z, const Color &color)
+      void drawPixel(int x, int y, Real z, const Color &color)
       {
         //std::cout << "Context::drawPixel()" << std::endl;
 
@@ -113,8 +113,8 @@ namespace GFX {
 
     private:
       Buffer<Color> m_colorBuffer;
-      Buffer<double> m_zBuffer;
-      double m_near;
+      Buffer<Real> m_zBuffer;
+      Real m_near;
       int m_width;
       int m_height;
       EnableFlags m_enabled;

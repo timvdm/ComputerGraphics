@@ -1,6 +1,8 @@
 #ifndef GFX_COLOR_H
 #define GFX_COLOR_H
 
+#include "types.h"
+
 #include <cassert>
 #include <vector>
 #include <iostream>
@@ -28,10 +30,15 @@ namespace GFX {
      *
      * @param rgb A std::vector containing the RGB components.
      */
+    Color(const std::vector<float> &rgb) : r(255 * rgb[0]), g(255 * rgb[1]), b(255 * rgb[2]), a(255)
+    {
+      assert(rgb.size() == 3);
+    }
     Color(const std::vector<double> &rgb) : r(255 * rgb[0]), g(255 * rgb[1]), b(255 * rgb[2]), a(255)
     {
       assert(rgb.size() == 3);
     }
+
 
     /**
      * @return The color black.

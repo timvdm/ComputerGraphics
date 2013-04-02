@@ -36,8 +36,8 @@ namespace GFX {
 
     static Real distance(const Point3D &A, const Point3D &B)
     {
-      double dx = A.x - B.x;
-      double dy = A.y - B.y;
+      Real dx = A.x - B.x;
+      Real dy = A.y - B.y;
       return std::sqrt(dx * dx + dy * dy);
     }
 

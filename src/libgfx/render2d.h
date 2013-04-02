@@ -35,7 +35,7 @@ namespace GFX {
           std::swap(y0, y1);
         }
 
-        double m = ((double) y1 - (double) y0) / ((double) x1 - (double) x0);
+        Real m = ((Real) y1 - (Real) y0) / ((Real) x1 - (Real) x0);
 
         if (-1.0 <= m && m <= 1.0) {
           for (unsigned int i = 0; i <= (x1 - x0); i++)
@@ -77,12 +77,12 @@ namespace GFX {
 
       void drawEllipse(unsigned int cx, unsigned int cy, unsigned int rx, unsigned int ry, const Color &color)
       {
-        double rx2 = rx * rx;
-        double ry2 = ry * ry;
+        Real rx2 = rx * rx;
+        Real ry2 = ry * ry;
 
         int x = 0;
         int y = ry;
-        double d1 = ry2 - rx2 * ry + 0.25 * rx2;
+        Real d1 = ry2 - rx2 * ry + 0.25 * rx2;
 
         ellipsePoints(cx, cy, x, y, color);
 
@@ -99,7 +99,7 @@ namespace GFX {
         }
 
         // region 2: dy > dx
-        double d2 = ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2;
+        Real d2 = ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2;
         while (y > 0) {
           if (d2 < 0) {
             d2 += ry2 * (2 * x + 2) + rx2 * (-2 * y + 3);
@@ -129,7 +129,7 @@ namespace GFX {
         */
 
         /*
-        double dist2 = (x3 - x0) * (x3 - x0) + (y3 - y0) * (y3 - y0);
+        Real dist2 = (x3 - x0) * (x3 - x0) + (y3 - y0) * (y3 - y0);
         std::cout << "dist2 = " << dist2 << std::endl;
         if (dist2 < 20.0) {
           drawLine(x0, y0, x3, y3, color);
@@ -138,23 +138,23 @@ namespace GFX {
         */
 
         // midpoint P0-P1
-        double xA = (x0 + x1) / 2.0; 
-        double yA = (y0 + y1) / 2.0;
+        Real xA = (x0 + x1) / 2.0; 
+        Real yA = (y0 + y1) / 2.0;
         // midpoint P2-P3
-        double xB = (x2 + x3) / 2.0; 
-        double yB = (y2 + y3) / 2.0;
+        Real xB = (x2 + x3) / 2.0; 
+        Real yB = (y2 + y3) / 2.0;
         // midpoint P1-P2
-        double xC = (x1 + x2) / 2.0; 
-        double yC = (y1 + y2) / 2.0;
+        Real xC = (x1 + x2) / 2.0; 
+        Real yC = (y1 + y2) / 2.0;
         // midpoint A-C
-        double xA1 = (xA + xC) / 2.0; 
-        double yA1 = (yA + yC) / 2.0;
+        Real xA1 = (xA + xC) / 2.0; 
+        Real yA1 = (yA + yC) / 2.0;
         // midpoint B-C
-        double xB1 = (xB + xC) / 2.0; 
-        double yB1 = (yB + yC) / 2.0;
+        Real xB1 = (xB + xC) / 2.0; 
+        Real yB1 = (yB + yC) / 2.0;
         // midpoint A1-B1
-        double xC1 = (xA1 + xB1) / 2.0; 
-        double yC1 = (yA1 + yB1) / 2.0;
+        Real xC1 = (xA1 + xB1) / 2.0; 
+        Real yC1 = (yA1 + yB1) / 2.0;
 
         if (std::abs(x0 - xC1) <= 5 && std::abs(y0 - yC1) <= 5)
           drawLine(x0, y0, xC1, yC1, color);

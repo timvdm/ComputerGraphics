@@ -34,16 +34,16 @@ namespace CG {
         std::vector<double> center = conf[figureName]["center"];
         m = GFX::translationMatrix(center[0], center[1], center[2]);
         // rotation around Z
-        double angleZ = conf[figureName]["rotateZ"];
+        GFX::Real angleZ = conf[figureName]["rotateZ"].as_double_or_die();
         m *= GFX::rotationMatrix(GFX::deg2rad(angleZ), 0, 0, 1);
         // rotation around Y
-        double angleY = conf[figureName]["rotateY"];
+        GFX::Real angleY = conf[figureName]["rotateY"].as_double_or_die();
         m *= GFX::rotationMatrix(GFX::deg2rad(angleY), 0, 1, 0);
         // rotation around X
-        double angleX = conf[figureName]["rotateX"];
+        GFX::Real angleX = conf[figureName]["rotateX"].as_double_or_die();
         m *= GFX::rotationMatrix(GFX::deg2rad(angleX), 1, 0, 0);
         // scale
-        double scale = conf[figureName]["scale"];
+        GFX::Real scale = conf[figureName]["scale"].as_double_or_die();
         m *= GFX::scaleMatrix(scale);
 
         return m;
@@ -141,13 +141,13 @@ namespace CG {
             } else if (type == "Cone") {
               
               int n = conf[figureName]["n"];
-              double h = conf[figureName]["height"];
+              GFX::Real h = conf[figureName]["height"].as_double_or_die();
               renderMesh(*GFX::Mesh::cone(n, h), color, project * model, lines);
 
             } else if (type == "Cylinder") {
               
               int n = conf[figureName]["n"];
-              double h = conf[figureName]["height"];
+              GFX::Real h = conf[figureName]["height"].as_double_or_die();
               renderMesh(*GFX::Mesh::cylinder(n, h), color, project * model, lines);
 
             } else if (type == "Sphere") {
@@ -159,8 +159,8 @@ namespace CG {
               
               int n = conf[figureName]["n"];
               int m = conf[figureName]["m"];
-              double R = conf[figureName]["R"];
-              double r = conf[figureName]["r"];
+              GFX::Real R = conf[figureName]["R"].as_double_or_die();
+              GFX::Real r = conf[figureName]["r"].as_double_or_die();
               renderMesh(*GFX::Mesh::torus(n, m, R, r), color, project * model, lines);
 
             } else if (type == "3DLSystem") {

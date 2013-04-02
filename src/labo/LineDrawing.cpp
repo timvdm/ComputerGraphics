@@ -1,6 +1,8 @@
 #include "../utils.h"
 #include "../plugin.h"
 
+#include "../libgfx/types.h"
+
 #include "render.h"
 
 #include <algorithm>

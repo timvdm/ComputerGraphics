@@ -47,9 +47,9 @@ namespace GFX {
     }
   }
 
-  std::vector<double> Mesh::triangleAttributes(bool normals, bool colors, bool texCoords)
+  std::vector<Real> Mesh::triangleAttributes(bool normals, bool colors, bool texCoords)
   {
-    std::vector<double> attr;
+    std::vector<Real> attr;
 
     if (normals && m_normals.size() != m_faces.size())
       computeNormals();
@@ -67,9 +67,9 @@ namespace GFX {
     return attr;
   }
   
-  std::vector<double> Mesh::quadAttributes(bool normals, bool colors, bool texCoords)
+  std::vector<Real> Mesh::quadAttributes(bool normals, bool colors, bool texCoords)
   {
-    std::vector<double> attr;
+    std::vector<Real> attr;
 
     if (normals && m_normals.size() != m_faces.size())
       computeNormals();
@@ -88,7 +88,7 @@ namespace GFX {
     return attr;
   }
 
-  void Mesh::addVertexAttributes(std::vector<double> &attr, int f, int v, bool normals, bool colors, bool texCoords)
+  void Mesh::addVertexAttributes(std::vector<Real> &attr, int f, int v, bool normals, bool colors, bool texCoords)
   {
     const Face &face = m_faces[f];
 
@@ -200,9 +200,9 @@ namespace GFX {
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
 
-    double sqrt_5_2 = std::sqrt(5.0) / 2.0;
-    double pi_2_5 = 2.0 * M_PI / 5.0;
-    double pi_5 = M_PI / 5.0;
+    Real sqrt_5_2 = std::sqrt(5.0) / 2.0;
+    Real pi_2_5 = 2.0 * M_PI / 5.0;
+    Real pi_5 = M_PI / 5.0;
 
     mesh->addVertex(0.0, 0.0, sqrt_5_2);
 
@@ -246,11 +246,11 @@ namespace GFX {
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
 
-    double sqrt_5_2 = std::sqrt(5.0) / 2.0;
-    double pi_2_5 = 2.0 * M_PI / 5.0;
-    double pi_5 = M_PI / 5.0;
+    Real sqrt_5_2 = std::sqrt(5.0) / 2.0;
+    Real pi_2_5 = 2.0 * M_PI / 5.0;
+    Real pi_5 = M_PI / 5.0;
 
-    double xyz[] = {
+    Real xyz[] = {
       0.0, 0.0, sqrt_5_2,
       std::cos(0.0 * pi_2_5), std::sin(0.0 * pi_2_5), 0.5,
       std::cos(1.0 * pi_2_5), std::sin(1.0 * pi_2_5), 0.5,
@@ -314,11 +314,11 @@ namespace GFX {
     return mesh;
   }
 
-  std::shared_ptr<Mesh> Mesh::cone(int n, double h)
+  std::shared_ptr<Mesh> Mesh::cone(int n, Real h)
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
 
-    double pi_2_n = 2.0 * M_PI / n;
+    Real pi_2_n = 2.0 * M_PI / n;
 
     for (int i = 0; i < n; ++i)
       mesh->addVertex(std::cos(i * pi_2_n), std::sin(i * pi_2_n), 0.0);
@@ -336,20 +336,20 @@ namespace GFX {
     return mesh;
   }
 
-  std::shared_ptr<Mesh> Mesh::cylinder(int n, double h)
+  std::shared_ptr<Mesh> Mesh::cylinder(int n, Real h)
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
     
-    double pi_2_n = 2.0 * M_PI / n;
+    Real pi_2_n = 2.0 * M_PI / n;
 
     for (int i = 0; i < n; ++i) {
-      double x = std::cos(i * pi_2_n);
-      double y = std::sin(i * pi_2_n);
+      Real x = std::cos(i * pi_2_n);
+      Real y = std::sin(i * pi_2_n);
       mesh->addVertex(x, y, 0.0);
     }
     for (int i = 0; i < n; ++i) {
-      double x = mesh->vertices()[i].x();
-      double y = mesh->vertices()[i].y();
+      Real x = mesh->vertices()[i].x();
+      Real y = mesh->vertices()[i].y();
       mesh->addVertex(x, y, h);
     }
 
@@ -371,9 +371,9 @@ namespace GFX {
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
 
-    double sqrt_5_2 = std::sqrt(5.0) / 2.0;
-    double pi_2_5 = 2.0 * M_PI / 5.0;
-    double pi_5 = M_PI / 5.0;
+    Real sqrt_5_2 = std::sqrt(5.0) / 2.0;
+    Real pi_2_5 = 2.0 * M_PI / 5.0;
+    Real pi_5 = M_PI / 5.0;
 
     std::vector<GFX::vec3> verts0;
     verts0.push_back(GFX::vec3(0.0, 0.0, sqrt_5_2));
@@ -459,17 +459,17 @@ namespace GFX {
     return mesh;
   }
 
-  std::shared_ptr<Mesh> Mesh::torus(int n, int m, double R, double r)
+  std::shared_ptr<Mesh> Mesh::torus(int n, int m, Real R, Real r)
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
 
     for (int i = 0; i < n; ++i)
       for (int j = 0; j < m; ++j) {
-        double u = 2.0 * i * M_PI / n;
-        double v = 2.0 * j * M_PI / m;
-        double x = (R + r * std::cos(v)) * std::cos(u);
-        double y = (R + r * std::cos(v)) * std::sin(u);
-        double z = r * std::sin(v);
+        Real u = 2.0 * i * M_PI / n;
+        Real v = 2.0 * j * M_PI / m;
+        Real x = (R + r * std::cos(v)) * std::cos(u);
+        Real y = (R + r * std::cos(v)) * std::sin(u);
+        Real z = r * std::sin(v);
         mesh->addVertex(x, y, z);
 
         int p0 = columnMajorIndex(i          , j          , m);

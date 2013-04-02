@@ -25,14 +25,14 @@ namespace GFX {
         m_millisecs += std::chrono::duration_cast<std::chrono::milliseconds>(stop - m_start).count();
       }
 
-      double fps() const
+      Real fps() const
       {
         return 1000.0 * m_frames / m_millisecs;
       }
 
     private:
       std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
-      double m_millisecs;
+      Real m_millisecs;
       int m_frames;
   };
 

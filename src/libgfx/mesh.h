@@ -18,7 +18,7 @@ namespace GFX {
       {
       }
 
-      void addVertex(double x, double y, double z)
+      void addVertex(Real x, Real y, Real z)
       {
         m_vertices.push_back(vec4(x, y, z, 1.0));
       }
@@ -33,12 +33,17 @@ namespace GFX {
         m_vertices.push_back(v);
       }
 
+      void addVertex(const std::vector<float> &v)
+      {
+        m_vertices.push_back(vec4(v[0], v[1], v[2], 1.0));
+      }
+
       void addVertex(const std::vector<double> &v)
       {
         m_vertices.push_back(vec4(v[0], v[1], v[2], 1.0));
       }
 
-      void addNormal(double x, double y, double z)
+      void addNormal(Real x, Real y, Real z)
       {
         m_normals.push_back(vec4(x, y, z, 1.0));
       }
@@ -51,6 +56,11 @@ namespace GFX {
       void addNormal(const vec4 &v)
       {
         m_normals.push_back(v);
+      }
+
+      void addNormal(const std::vector<float> &v)
+      {
+        m_normals.push_back(vec4(v[0], v[1], v[2], 1.0));
       }
 
       void addNormal(const std::vector<double> &v)
@@ -141,9 +151,9 @@ namespace GFX {
        */
       void computeNormals();
 
-      std::vector<double> triangleAttributes(bool normals = false, bool colors = false, bool texCoords = false);
+      std::vector<Real> triangleAttributes(bool normals = false, bool colors = false, bool texCoords = false);
 
-      std::vector<double> quadAttributes(bool normals = false, bool colors = false, bool texCoords = false);
+      std::vector<Real> quadAttributes(bool normals = false, bool colors = false, bool texCoords = false);
 
 
       static Face make_face(int i, int j, int k = -1, int l = -1, int m = -1);
@@ -153,13 +163,13 @@ namespace GFX {
       static std::shared_ptr<Mesh> octahedron();
       static std::shared_ptr<Mesh> icosahedron();
       static std::shared_ptr<Mesh> dodecahedron();
-      static std::shared_ptr<Mesh> cone(int n, double h);
-      static std::shared_ptr<Mesh> cylinder(int n, double h);
+      static std::shared_ptr<Mesh> cone(int n, Real h);
+      static std::shared_ptr<Mesh> cylinder(int n, Real h);
       static std::shared_ptr<Mesh> sphere(int n);
-      static std::shared_ptr<Mesh> torus(int n, int m, double R, double r);
+      static std::shared_ptr<Mesh> torus(int n, int m, Real R, Real r);
 
     private:
-      void addVertexAttributes(std::vector<double> &attr, int f, int v, bool normals, bool colors, bool texCoords);
+      void addVertexAttributes(std::vector<Real> &attr, int f, int v, bool normals, bool colors, bool texCoords);
 
       std::vector<vec4> m_vertices; //!< The vertices.
       std::vector<Face> m_faces; //!< The faces.
