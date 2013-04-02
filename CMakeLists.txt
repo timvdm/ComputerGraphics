@@ -31,6 +31,7 @@ set(cg_SRCS
   src/labo/LSystem3D.cpp
   src/labo/Wireframe.cpp
   src/labo/ZBufferedWireframe.cpp
+  src/labo/ZBuffering.cpp
 )
 
 add_executable(engine ${cg_SRCS})

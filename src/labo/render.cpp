@@ -3,6 +3,7 @@
 #include "../libgfx/mesh.h"
 #include "../libgfx/buffer.h"
 #include "../libgfx/utility.h"
+#include "../libgfx/render3d.h"
 
 #include <limits>
 #include <algorithm>
@@ -118,14 +119,14 @@ img::EasyImage draw_lines(Lines2D &lines, int size, const img::Color &bgColor)
   img::EasyImage image(imageSizes.first, imageSizes.second, bgColor);
   for (std::size_t i = 0; i < lines.size(); ++i) {
     //std::cout << lines[i].p1 << " -> " << lines[i].p2 << std::endl;
-    image.draw_line(lines[i].p1.x + 0.5, lines[i].p1.y + 0.5, lines[i].p2.x + 0.5, lines[i].p2.y + 0.5, 
+    image.draw_line(lines[i].p1.x + 0.5, lines[i].p1.y + 0.5, lines[i].p2.x + 0.5, lines[i].p2.y + 0.5,
         img::Color(lines[i].color.r, lines[i].color.g, lines[i].color.b));
   }
 
   return image;
 }
 
-struct Ctx 
+struct Ctx
 {
   Ctx(int width, int height, const img::Color &bgColor) : image(width, height, bgColor), zBuffer(width, height)
   {
@@ -162,7 +163,7 @@ void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color 
     for (int i = minY; i <= maxY; ++i)
       draw_pixel(ctx, p1.x, i, p1.z, p2.z, i, numY, color);
     return;
-  } 
+  }
 
   if (p1.y == p2.y) {
     // special case for p1.y == p2.y
@@ -229,7 +230,7 @@ img::EasyImage draw_zbuffered_lines(GFX::Lines3D &lines, int size, const img::Co
   center_lines(lines, imageSizes, center);
 
   Ctx ctx(imageSizes.first, imageSizes.second, bgColor);
-  
+
   // draw the lines
   for (std::size_t i = 0; i < lines.size(); ++i) {
     //std::cout << lines[i].p1 << " -> " << lines[i].p2 << std::endl;
@@ -239,7 +240,7 @@ img::EasyImage draw_zbuffered_lines(GFX::Lines3D &lines, int size, const img::Co
   return ctx.image;
 }
 
-void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines2D &lines)
+void mesh_to_lines2d(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines2D &lines)
 {
   GFX::vec4 p1, p2;
   for (std::size_t i = 0; i < mesh.faces().size(); ++i) {
@@ -264,7 +265,7 @@ void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 
   }
 }
 
-void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines3D &lines)
+void mesh_to_lines3d(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines3D &lines)
 {
   GFX::vec4 p1, p2;
   for (std::size_t i = 0; i < mesh.faces().size(); ++i) {
@@ -283,10 +284,150 @@ void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 
 
       GFX::Point3D projP1(p1.x() / -p1.z(), p1.y() / -p1.z(), p1.z());
       GFX::Point3D projP2(p2.x() / -p2.z(), p2.y() / -p2.z(), p2.z());
-      
+
       //std::cout << "z1 = " << projP1.z << ", z2 = " << projP2.z << std::endl;
 
       lines.push_back(GFX::Line3D(projP1, projP2, color));
     }
   }
+}
+
+std::pair<GFX::Point2D, GFX::Point2D> get_min_max(const GFX::Mesh &mesh, const GFX::mat4 &T)
+{
+  std::vector<GFX::Real> x;
+  std::vector<GFX::Real> y;
+
+  for (std::size_t i = 0; i < mesh.vertices().size(); ++i) {
+    // transform vertex
+    GFX::vec4 p = T * mesh.vertices()[i];
+    // project using d = 1
+    x.push_back(p.x() / -p.z());
+    y.push_back(p.y() / -p.z());
+  }
+
+  GFX::Real minX = *std::min_element(x.begin(), x.end());
+  GFX::Real maxX = *std::max_element(x.begin(), x.end());
+  GFX::Real minY = *std::min_element(y.begin(), y.end());
+  GFX::Real maxY = *std::max_element(y.begin(), y.end());
+
+  return std::make_pair(GFX::Point2D(minX, minY), GFX::Point2D(maxX, maxY));
+}
+
+void screen_coordinate(const Ctx &ctx, GFX::vec4 &v, Real d, Real cx, Real cy)
+{
+  v.x() = d * v.x() / -v.z() + ctx.zBuffer.width() / 2.0 - cx;
+  v.y() = d * v.y() / -v.z() + ctx.zBuffer.height() / 2.0 - cy;
+}
+
+void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB, const GFX::vec4 &vC,
+    const GFX::mat4 &T, Real d, Real cx, Real cy, const GFX::Color &color)
+{
+  // apply model-view matrix (Model space -> Word Space -> View space)
+  GFX::vec4 A = T * vA;
+  GFX::vec4 B = T * vB;
+  GFX::vec4 C = T * vC;
+
+  GFX::vec3 u = GFX::vec3(B.data()) - GFX::vec3(A.data());
+  GFX::vec3 v = GFX::vec3(C.data()) - GFX::vec3(A.data());
+  GFX::vec3 w = u.cross(v);
+
+  GFX::Real k = w.dot(GFX::vec3(A.data()));
+  GFX::Real dzdx = -w.x() / (d * k);
+  GFX::Real dzdy = -w.y() / (d * k);
+
+  GFX::Real zG = 1.0 / (3.0 * A.z()) + 1.0 / (3.0 * B.z()) + 1.0 / (3.0 * C.z());
+
+  // project (View Space -> Screen space)
+  screen_coordinate(ctx, A, d, cx, cy);
+  screen_coordinate(ctx, B, d, cx, cy);
+  screen_coordinate(ctx, C, d, cx, cy);
+
+  GFX::Real xG = (A.x() + B.x() + C.x()) / 3.0;
+  GFX::Real yG = (A.y() + B.y() + C.y()) / 3.0;
+
+  // determine y range in screen coordinates
+  int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
+  int maxY = nearest(std::max(A.y(), std::max(B.y(), C.y())) - 0.5);
+
+  for (int y = minY; y <= maxY; ++y) {
+    // compute x range in screen coordinates
+    std::pair<int, int> xRange = impl::compute_x_range(y, A, B, C);
+    int xL = xRange.first;
+    int xR = xRange.second;
+
+    for (int x = xL; x <= xR; ++x) {
+
+      // interpolate 1/z
+      GFX::Real z = 1.0001 * zG + (x - xG) * dzdx + (y - yG) * dzdy;
+
+      // draw the pixel
+      ctx.drawPixel(x, y, z, color);
+    }
+  }
+
+}
+
+img::EasyImage draw_zbuffered_mesh(const GFX::Mesh &mesh, const GFX::mat4 &T, const GFX::Color &color, int size, const img::Color &bgColor)
+{
+  // compute some properties for the lines
+  std::pair<Point2D, Point2D> minMax = get_min_max(mesh, T);
+  std::pair<int, int> imageSizes = get_image_sizes(minMax, size);
+  Real d = get_scale_factor(minMax, imageSizes.first);
+  Point2D center = get_center(minMax, d);
+
+  Ctx ctx(imageSizes.first, imageSizes.second, bgColor);
+
+  for (std::size_t i = 0; i < mesh.faces().size(); ++i) {
+    const std::vector<int> &face = mesh.faces()[i];
+    assert(face.size() == 3);
+
+    const GFX::vec4 &A = mesh.vertices()[face[0]];
+    const GFX::vec4 &B = mesh.vertices()[face[1]];
+    const GFX::vec4 &C = mesh.vertices()[face[2]];
+
+    draw_zbuffered_triangle(ctx, A, B, C, T, d, center.x, center.y, color);
+  }
+
+  return ctx.image;
+}
+
+img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &project,
+    const std::vector<GFX::mat4> &modelMatrices, const std::vector<GFX::Color> &colors, int size, const img::Color &bgColor)
+{
+  // compute some properties for the lines
+  std::pair<Point2D, Point2D> minMax = std::make_pair(Point2D(std::numeric_limits<Real>::max(), std::numeric_limits<Real>::max()),
+                                                      Point2D(std::numeric_limits<Real>::min(), std::numeric_limits<Real>::min()));
+
+  for (std::size_t i = 0; i < meshes.size(); ++i) {
+    std::pair<Point2D, Point2D> meshMinMax = get_min_max(*meshes[i], project * modelMatrices[i]);
+    if (meshMinMax.first.x < minMax.first.x)
+      minMax.first.x = meshMinMax.first.x;
+    if (meshMinMax.first.y < minMax.first.y)
+      minMax.first.y = meshMinMax.first.y;
+    if (meshMinMax.second.x > minMax.second.x)
+      minMax.second.x = meshMinMax.second.x;
+    if (meshMinMax.second.y > minMax.second.y)
+      minMax.second.y = meshMinMax.second.y;
+  }
+
+  std::pair<int, int> imageSizes = get_image_sizes(minMax, size);
+  Real d = get_scale_factor(minMax, imageSizes.first);
+  Point2D center = get_center(minMax, d);
+
+  Ctx ctx(imageSizes.first, imageSizes.second, bgColor);
+
+  for (std::size_t i = 0; i < meshes.size(); ++i) {
+    for (std::size_t j = 0; j < meshes[i]->faces().size(); ++j) {
+      const std::vector<int> &face = meshes[i]->faces()[j];
+      assert(face.size() == 3);
+
+      const GFX::vec4 &A = meshes[i]->vertices()[face[0]];
+      const GFX::vec4 &B = meshes[i]->vertices()[face[1]];
+      const GFX::vec4 &C = meshes[i]->vertices()[face[2]];
+
+      draw_zbuffered_triangle(ctx, A, B, C, project * modelMatrices[i], d, center.x, center.y, colors[i]);
+    }
+  }
+
+  return ctx.image;
 }

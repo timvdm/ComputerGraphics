@@ -11,7 +11,7 @@
 
 namespace CG {
 
-  class ZBufferedWireframe : public Plugin
+  class ZBuffering : public Plugin
   {
     public:
       GFX::Color extractColor(const ini::Entry &entry) const
@@ -49,39 +49,6 @@ namespace CG {
         return m;
       }
 
-      bool renderLineDrawing(const std::string &figureName, const ini::Configuration &conf,
-          GFX::Lines3D &lines, const GFX::mat4 &T)
-      {
-        int nrPoints;
-        int nrLines;
-        GFX::Color color;
-
-        try {
-          color = extractColor(conf[figureName]["color"]);
-          nrPoints = conf[figureName]["nrPoints"];
-          nrLines = conf[figureName]["nrLines"];
-        } catch (const std::exception &e) {
-          std::cerr << e.what() << std::endl;
-          return false;
-        }
-
-        GFX::Mesh mesh;
-
-        try {
-          for (int j = 0; j < nrPoints; ++j)
-            mesh.addVertex(conf[figureName][make_string("point", j)]);
-          for (int j = 0; j < nrLines; ++j)
-            mesh.addFace(conf[figureName][make_string("line", j)]);
-        } catch (const std::exception &e) {
-          std::cerr << e.what() << std::endl;
-          return false;
-        }
-
-        mesh_to_lines3d(mesh, color, T, lines);
-
-        return true;
-      }
-
       img::EasyImage image(const ini::Configuration &conf)
       {
         int size;
@@ -102,7 +69,9 @@ namespace CG {
 
         GFX::mat4 project = GFX::projectionMatrix(eye[0], eye[1], eye[2]);
 
-        GFX::Lines3D lines;
+        std::vector<std::shared_ptr<GFX::Mesh> > meshes;
+        std::vector<GFX::mat4> modelMatrices;
+        std::vector<GFX::Color> colors;
 
         for (int i = 0; i < nrFigures; ++i) {
           std::string figureName = make_string("Figure", i);
@@ -110,50 +79,64 @@ namespace CG {
           try {
             std::string type = conf[figureName]["type"].as_string_or_die();
             GFX::Color color = extractColor(conf[figureName]["color"]);
+            colors.push_back(color);
 
             GFX::mat4 model = modelMatrix(figureName, conf);
+            modelMatrices.push_back(model);
 
-            if (type == "LineDrawing") {
+            if (type == "Cube") {
 
-              if (!renderLineDrawing(figureName, conf, lines, project * model))
-                return img::EasyImage();
-
-            } else if (type == "Cube") {
-
-              mesh_to_lines3d(*GFX::Mesh::cube(), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::cube();
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             } else if (type == "Tetrahedron") {
 
-              mesh_to_lines3d(*GFX::Mesh::tetrahedron(), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::tetrahedron();
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             } else if (type == "Octahedron") {
 
-              mesh_to_lines3d(*GFX::Mesh::octahedron(), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::octahedron();
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             } else if (type == "Icosahedron") {
 
-              mesh_to_lines3d(*GFX::Mesh::icosahedron(), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::icosahedron();
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             } else if (type == "Dodecahedron") {
 
-              mesh_to_lines3d(*GFX::Mesh::dodecahedron(), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::dodecahedron();
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             } else if (type == "Cone") {
 
               int n = conf[figureName]["n"];
               GFX::Real h = conf[figureName]["height"].as_double_or_die();
-              mesh_to_lines3d(*GFX::Mesh::cone(n, h), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::cone(n, h);
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             } else if (type == "Cylinder") {
 
               int n = conf[figureName]["n"];
               GFX::Real h = conf[figureName]["height"].as_double_or_die();
-              mesh_to_lines3d(*GFX::Mesh::cylinder(n, h), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::cylinder(n, h);
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             } else if (type == "Sphere") {
 
               int n = conf[figureName]["n"];
-              mesh_to_lines3d(*GFX::Mesh::sphere(n), color, project * model, lines);
+              //renderMesh(*GFX::Mesh::sphere(n), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::sphere(n);
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             } else if (type == "Torus") {
 
@@ -161,12 +144,9 @@ namespace CG {
               int m = conf[figureName]["m"];
               GFX::Real R = conf[figureName]["R"].as_double_or_die();
               GFX::Real r = conf[figureName]["r"].as_double_or_die();
-              mesh_to_lines3d(*GFX::Mesh::torus(n, m, R, r), color, project * model, lines);
-
-            } else if (type == "3DLSystem") {
-
-              std::string inputfile = conf[figureName]["inputfile"].as_string_or_die();
-              mesh_to_lines3d(*LSystem3D::generateMesh(inputfile), color, project * model, lines);
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::torus(n, m, R, r);
+              mesh->triangulate();
+              meshes.push_back(mesh);
 
             }
 
@@ -176,11 +156,11 @@ namespace CG {
           }
         }
 
-        return draw_zbuffered_lines(lines, size, img::Color(255 * bgColor.r, 255 * bgColor.g, 255 * bgColor.b));
+        return draw_zbuffered_meshes(meshes, project, modelMatrices, colors, size, img::Color(255 * bgColor.r, 255 * bgColor.g, 255 * bgColor.b));
       }
 
   };
 
-  PLUGIN_FACTORY("ZBufferedWireframe", ZBufferedWireframe)
+  PLUGIN_FACTORY("ZBuffering", ZBuffering)
 
 }

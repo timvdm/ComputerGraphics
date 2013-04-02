@@ -3,9 +3,10 @@
 
 #include "../utils/EasyImage.h"
 
-
 #include "../libgfx/line2d.h"
 #include "../libgfx/line3d.h"
+
+#include <memory>
 
 /**
  * @brief Find the min. and max. paints for a set of lines.
@@ -87,9 +88,15 @@ namespace GFX {
   class Mesh;
 }
 
-void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines2D &lines);
-void renderMesh(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines3D &lines);
+void mesh_to_lines2d(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines2D &lines);
+void mesh_to_lines3d(const GFX::Mesh &mesh, const GFX::Color &color, const GFX::mat4 &T, GFX::Lines3D &lines);
 
 img::EasyImage draw_zbuffered_lines(GFX::Lines3D &lines, int size, const img::Color &bgColor);
+
+std::pair<GFX::Point2D, GFX::Point2D> get_min_max(const GFX::Mesh &mesh, const GFX::mat4 &T);
+
+img::EasyImage draw_zbuffered_mesh(const GFX::Mesh &mesh, const GFX::mat4 &T, const GFX::Color &color, int size, const img::Color &bgColor);
+img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &T,
+    const std::vector<GFX::mat4> &modelMatrices, const std::vector<GFX::Color> &colors, int size, const img::Color &bgColor);
 
 #endif
