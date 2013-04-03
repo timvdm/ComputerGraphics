@@ -75,6 +75,9 @@ namespace GFX {
   {
     std::vector<int> sizes;
 
+    x += 0.5 * x;
+    y += 0.5 * y;
+
     if (x > y)
       for (std::size_t i = 0; i < m_textures.size(); ++i)
         sizes.push_back(std::abs(m_textures[i].width() - x));
