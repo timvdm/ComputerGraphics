@@ -149,7 +149,7 @@ namespace GFX {
        * This method computes the face normals assuming face vertices are
        * ordered counter clockwise.
        */
-      void computeNormals();
+      void computeNormals(bool smooth = false);
 
       void triangulate();
 

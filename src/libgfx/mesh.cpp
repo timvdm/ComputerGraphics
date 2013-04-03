@@ -25,7 +25,7 @@ namespace GFX {
     m_colors[index] = color;
   }
 
-  void Mesh::computeNormals()
+  void Mesh::computeNormals(bool smooth)
   {
     m_normals.clear();
 
@@ -45,35 +45,48 @@ namespace GFX {
 
       m_normals.push_back(n);    
     }
+
+    if (!smooth)
+      return;
+
+    std::vector<vec4> normals;
+    for (std::size_t i = 0; i < m_vertices.size(); ++i) {
+      vec4 normal(vec4::Zero());
+      for (std::size_t j = 0; j < m_vertices.size(); ++j) {
+        Real dist = (m_vertices[i] - m_vertices[j]).norm();
+        if (dist < 0.00001)
+          for (std::size_t k = 0; k < m_faces.size(); ++k)
+            if (std::find(m_faces[k].begin(), m_faces[k].end(), j) != m_faces[k].end())
+              normal += m_normals[k];
+      }
+      normal.normalize();
+      normals.push_back(normal);
+    }
+
+    m_normals.swap(normals);
   }
 
   void Mesh::triangulate()
   {
-    //std::vector<Face> newFaces;
-
     std::size_t numFaces = m_faces.size();
     for (std::size_t i = 0; i < numFaces; ++i) {
       Face face = m_faces[i];
       if (face.size() <= 3)
         continue;
 
-      //for (std::size_t j = 1; j < face.size() - 1; ++j)
-      //  newFaces.push_back(make_face(face[0], face[j], face[j + 1]));
       for (std::size_t j = 1; j < face.size() - 1; ++j)
         if (j == 1)
           m_faces[i] = make_face(face[0], face[j], face[j + 1]);
         else
           m_faces.push_back(make_face(face[0], face[j], face[j + 1]));
     }
-
-    //m_faces = newFaces;
   }
 
   std::vector<Real> Mesh::triangleAttributes(bool normals, bool colors, bool texCoords)
   {
     std::vector<Real> attr;
 
-    if (normals && m_normals.size() != m_faces.size())
+    if (normals && m_normals.size() != m_faces.size() && m_normals.size() != m_vertices.size())
       computeNormals();
 
     for (std::size_t i = 0; i < m_faces.size(); ++i) {
@@ -93,7 +106,7 @@ namespace GFX {
   {
     std::vector<Real> attr;
 
-    if (normals && m_normals.size() != m_faces.size())
+    if (normals && m_normals.size() != m_faces.size() && m_normals.size() != m_vertices.size())
       computeNormals();
 
     for (std::size_t i = 0; i < m_faces.size(); ++i) {
@@ -119,9 +132,15 @@ namespace GFX {
     attr.push_back(m_vertices[face[v]].z());
 
     if (normals) {
-      attr.push_back(m_normals[f].x());
-      attr.push_back(m_normals[f].y());
-      attr.push_back(m_normals[f].z());
+      if (m_normals.size() == m_faces.size()) {
+        attr.push_back(m_normals[f].x());
+        attr.push_back(m_normals[f].y());
+        attr.push_back(m_normals[f].z());
+      } else if (m_normals.size() == m_vertices.size()) {
+        attr.push_back(m_normals[face[v]].x());
+        attr.push_back(m_normals[face[v]].y());
+        attr.push_back(m_normals[face[v]].z());
+      }
     }
 
     if (colors) {
