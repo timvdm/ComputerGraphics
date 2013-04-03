@@ -71,56 +71,7 @@ void TextureWidget::render()
 
   vertexShader.u_mvp = project * view * rotateX * rotateY;
 
-
-  /*
-  double walls[] = {
-    // front
-    -2, -1, -1, 0, 0,
-     2, -1, -1, 2, 0,
-     2,  1, -1, 2, 1,
-
-    -2, -1, -1, 0, 0,
-     2,  1, -1, 2, 1,
-    -2,  1, -1, 0, 1,
-
-    // right
-     2, -1, -1, 0, 0,
-     2, -1,  1, 1, 0,
-     2,  1,  1, 1, 1,
-     
-     2, -1, -1, 0, 0,
-     2,  1,  1, 1, 1,
-     2,  1, -1, 0, 1,
-
-    // back
-     2, -1,  1, 0, 0,
-    -2, -1,  1, 2, 0,
-    -2,  1,  1, 2, 1,
-
-     2, -1,  1, 0, 0,
-    -2,  1,  1, 2, 1,
-     2,  1,  1, 0, 1,
-
-    // left
-    -2, -1,  1, 0, 0,
-    -2, -1, -1, 1, 0,
-    -2,  1, -1, 1, 1,
-
-    -2, -1,  1, 0, 0,
-    -2,  1, -1, 1, 1,
-    -2,  1,  1, 0, 1,
-
-    // left triangle
-    -2,  1,  1,    0,   0,
-    -2,  1, -1,    1,   0,
-    -2,  2,  0,  0.5, 0.5,
-
-    // right triangle
-     2,  1, -1,    0,   0,
-     2,  1,  1,    1,   0,
-     2,  2,  0,  0.5, 0.5
-  };
-  */
+  // x, y, z, u, v
   double walls[] = {
     // front
     -2, -1, -1,       0, 0.5,
@@ -169,19 +120,6 @@ void TextureWidget::render()
      2,  2,  0, 5 / 6.0, 0.75
   };
 
-  /*
-  double roof[] = {
-    -2,  1, -1, 0, 0,
-     2,  1, -1, 2, 0,
-     2,  2,  0, 2, 1,
-    -2,  2,  0, 0, 1,
-
-     2,  1,  1, 0, 0,
-    -2,  1,  1, 2, 0,
-    -2,  2,  0, 2, 1,
-     2,  2,  0, 0, 1
-  };
-  */
   double roof[] = {
     -2,  1, -1, 1 / 3.0,   0,
      2,  1, -1,       1,   0,
@@ -194,14 +132,6 @@ void TextureWidget::render()
      2,  2,  0, 1 / 3.0, 0.5
   };
 
-  /* 3 textures
-  double ground[] = {
-    -3, -1,  3, 0, 0,
-     3, -1,  3, 1, 0,
-     3, -1, -3, 1, 1,
-    -3, -1, -3, 0, 1
-  };
-  */
   double ground[] = {
     -3, -1,  3,       0,   0,
      3, -1,  3, 1 / 3.0,   0,
@@ -244,16 +174,8 @@ void TextureWidget::render()
       vertexShader.u_mvp = save;
     }
   */
- 
 
-  for (int i = 0; i < context().width(); ++i)
-    for (int j = 0; j < context().height(); ++j) {
-      const GFX::Color &color = context().colorBuffer()(i, j);
-      image().setPixel(i, context().height() - j - 1, color.toARGB());
-    }
-  
-  QPainter painter(this);
-  painter.drawImage(0, 0, image());
+  copyColorBufferToImage();
 }
 
 

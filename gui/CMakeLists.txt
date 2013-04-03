@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 2.8)
 project(GfxGui)
 
+set(programs
+  texture
+  light
+)
+
+
+
+
+
+
 find_package(Qt4)
 
 # only build gui example if Qt4 is found
@@ -9,26 +19,29 @@ if (QT4_FOUND)
 
   include_directories(../src)
 
-
-  set(texture_HDRS
-    gfxwidget.h
-    texturewidget.h
-  )
-
-  set(texture_SRCS
-    libgfx/
-    texture.cpp
-    gfxwidget.cpp
-    texturewidget.cpp
-  )
-
-  qt4_wrap_cpp(texture_HDRS_MOC ${texture_HDRS})
-
   include(${QT_USE_FILE})
   add_definitions(${QT_DEFINITIONS})
 
-  add_executable(texture ${texture_SRCS} ${texture_HDRS_MOC})
-  target_link_libraries(texture libgfx ${QT_LIBRARIES})
+  foreach(prog ${programs})
+
+    set(${prog}_HDRS
+      gfxwidget.h
+      ${prog}widget.h
+    )
+
+    set(${prog}_SRCS
+      libgfx/
+      gfxwidget.cpp
+      ${prog}.cpp
+      ${prog}widget.cpp
+    )
+
+    qt4_wrap_cpp(${prog}_HDRS_MOC ${${prog}_HDRS})
+
+    add_executable(${prog} ${${prog}_SRCS} ${${prog}_HDRS_MOC})
+    target_link_libraries(${prog} libgfx ${QT_LIBRARIES})
+
+  endforeach()
 
 else()
   message(STATUS "Qt4 not found: not building GUI example.")

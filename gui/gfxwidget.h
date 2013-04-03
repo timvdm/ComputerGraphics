@@ -51,6 +51,8 @@ class GfxWidget : public QLabel
       return m_image;
     }
     
+    void copyColorBufferToImage();
+    
   protected:
     virtual void paintEvent(QPaintEvent *painter);
 

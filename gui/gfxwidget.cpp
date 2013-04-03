@@ -8,6 +8,18 @@ GfxWidget::GfxWidget(int width, int height, QWidget *parent) : QLabel(parent),
   setPixmap(pm);
   m_angleX = m_angleY = 0.0;
 }
+    
+void GfxWidget::copyColorBufferToImage()
+{
+  for (int i = 0; i < m_context.width(); ++i)
+    for (int j = 0; j < m_context.height(); ++j) {
+      const GFX::Color &color = m_context.colorBuffer()(i, j);
+      image().setPixel(i, m_context.height() - j - 1, color.toARGB());
+    }
+  
+  QPainter painter(this);
+  painter.drawImage(0, 0, m_image);
+}
 
 void GfxWidget::mouseMoveEvent(QMouseEvent *event)
 {
