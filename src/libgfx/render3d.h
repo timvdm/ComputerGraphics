@@ -169,6 +169,10 @@ namespace GFX {
 
       Real xa, xb;
       switch (intersections) {
+        case 1:
+        case 2:
+        case 4:
+          assert(0);
         case 3:
           // A-B and A-C intersect scanline
           xa = intersection(y, A, B);
@@ -183,6 +187,11 @@ namespace GFX {
           // A-C and B-C intersect scanline
           xb = intersection(y, A, C);
           xa = intersection(y, B, C);
+          break;
+        case 7:
+          // All points on scanline
+          xa = std::min(A.x(), std::min(B.x(), C.x()));
+          xb = std::max(A.x(), std::max(B.x(), C.x()));
           break;
       }
 
@@ -390,13 +399,22 @@ namespace GFX {
         screenCoordinates(B);
         screenCoordinates(C);
 
+        GFX::vec3 u = GFX::vec3(B.data()) - GFX::vec3(A.data());
+        GFX::vec3 v = GFX::vec3(C.data()) - GFX::vec3(A.data());
+        GFX::vec3 w = u.cross(v);
+        Real angle = w.dot(GFX::vec3(0, 0, -1));
+        if (angle < 0)
+          return;
+
+
         // determine y range in screen coordinates
         int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
         int maxY = nearest(std::max(A.y(), std::max(B.y(), C.y())) - 0.5);
 
+        // determine x range in screen coordinates
         int minX = std::min(A.x(), std::min(B.x(), C.x()));
         int maxX = std::max(A.x(), std::max(B.x(), C.x()));
-
+        // select mipmaps based on x range
         m_context.setMipmaps(maxX - minX, maxY - minY);
 
         if (minY < 0)
