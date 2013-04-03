@@ -33,32 +33,32 @@ namespace GFX {
       return std::sqrt(dx * dx + dy * dy);
     }
 
-    Color interpolateVarying(const Color &cA, const Color &cB, const vec4 &A, const vec4 &B, const Point2D &I)
+    ColorF interpolateVarying(const ColorF &cA, const ColorF &cB, const vec4 &A, const vec4 &B, const Point2D &I)
     {
       Real a = distance(B.x(), B.y(), I.x, I.y) / distance(A.x(), A.y(), B.x(), B.y());
       Real b = 1.0 - a;
-      return Color(cA.r * a + cB.r * b, cA.g * a + cB.g * b, cA.b * a + cB.b * b);
+      return ColorF(cA.r * a + cB.r * b, cA.g * a + cB.g * b, cA.b * a + cB.b * b);
     }
 
     template<int I = 0, typename... Tp>
-      typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
-          const std::tuple<Tp...>&, const std::tuple<Tp...>&, const vec4 &,
-          const vec4 &, const Point2D &, std::tuple<Tp...>&)
-      {
-      }
+    typename std::enable_if<I == sizeof...(Tp), void>::type callInterpolationFunction(
+        const std::tuple<Tp...>&, const std::tuple<Tp...>&, const vec4 &,
+        const vec4 &, const Point2D &, std::tuple<Tp...>&)
+    {
+    }
 
     template<int I = 0, typename... Tp>
-      typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
-          const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB,
-          const vec4 &A, const vec4 &B, const Point2D &C, std::tuple<Tp...> &varying)
-      {
-        std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), A, B, C);
-        callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, A, B, C, varying);
-      }
+    typename std::enable_if<I < sizeof...(Tp), void>::type callInterpolationFunction(
+        const std::tuple<Tp...> &varyingA, const std::tuple<Tp...> &varyingB,
+        const vec4 &A, const vec4 &B, const Point2D &C, std::tuple<Tp...> &varying)
+    {
+      std::get<I>(varying) = interpolateVarying(std::get<I>(varyingA), std::get<I>(varyingB), A, B, C);
+      callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, A, B, C, varying);
+    }
 
 
     /**
-     * @brief Interpolate a Color across a triangle using barycentric interpolation.
+     * @brief Interpolate a ColorF across a triangle using barycentric interpolation.
      *
      * The barycentric interpolation uses the area of the triangles ABC, IAB, IAC
      * and IBC to compute the percentages of each color.
@@ -73,13 +73,13 @@ namespace GFX {
      *
      * @return The interpolated color.
      */
-    Color interpolateVarying(const Color &cA, const Color &cB, const Color &cC,
+    ColorF interpolateVarying(const ColorF &cA, const ColorF &cB, const ColorF &cC,
         const vec4 &A, const vec4 &B, const vec4 &C,
         Real a, Real b, Real c)
     {
-      return Color(cA.r * a + cB.r * b + cC.r * c,
-          cA.g * a + cB.g * b + cC.g * c,
-          cA.b * a + cB.b * b + cC.b * c);
+      return ColorF(cA.r * a + cB.r * b + cC.r * c,
+                    cA.g * a + cB.g * b + cC.g * c,
+                    cA.b * a + cB.b * b + cC.b * c);
     }
 
     TexCoord interpolateVarying(const TexCoord &uvA, const TexCoord &uvB, const TexCoord &uvC,
@@ -101,7 +101,7 @@ namespace GFX {
       Real one_over_w = one_over_wA * a + one_over_wB * b + one_over_wC * c;
 
       return TexCoord((u_over_wA * a + u_over_wB * b + u_over_wC * c) / one_over_w,
-          (v_over_wA * a + v_over_wB * b + v_over_wC * c) / one_over_w);
+                      (v_over_wA * a + v_over_wB * b + v_over_wC * c) / one_over_w);
     }
 
     /**
@@ -294,7 +294,7 @@ namespace GFX {
 
           for (int i = minY; i <= maxY; ++i) {
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(A.x(), i), varying);
-            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(A.x(), i, interpolateLineZ(A.z(), B.z(), i, numY), color);
           }
           return;
@@ -313,7 +313,7 @@ namespace GFX {
 
           for (int i = minX; i <= maxX; ++i) {
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(i, A.y()), varying);
-            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(i, A.y(), interpolateLineZ(A.z(), B.z(), i, numX), color);
           }
           return;
@@ -336,7 +336,7 @@ namespace GFX {
               continue;
 
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
         } else if (m > 1.0) {
@@ -349,7 +349,7 @@ namespace GFX {
               continue;
 
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
         } else if (m < -1.0) {
@@ -362,7 +362,7 @@ namespace GFX {
               continue;
 
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
         }
@@ -425,7 +425,7 @@ namespace GFX {
             impl::callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
 
             // execute fragment shader
-            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
 
             // draw the pixel
             m_context.drawPixel(x, y, z, color);

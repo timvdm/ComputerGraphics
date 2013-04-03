@@ -35,16 +35,7 @@ struct TextureFragmentShader
 {
   typedef std::tuple<GFX::TexCoord> varying_type;
 
-  GFX::Color texel(double u, double v) const
-  {
-    bool i = static_cast<int>(u * 10) % 2;
-    bool j = static_cast<int>(v * 10) % 2;
-    if (i == j)
-      return GFX::Color::white();
-    return GFX::Color::blue();
-  }
-
-  GFX::Color exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, bool backFace = false)
+  GFX::ColorF exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, bool backFace = false)
   {
     const GFX::TexCoord &uv = std::get<0>(varying);
     return textures[u_activeTexture](uv.u, uv.v);

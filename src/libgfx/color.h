@@ -9,8 +9,10 @@
 
 namespace GFX {
 
+  struct ColorF;
+
   /**
-   * @brief Class representing a RGB color. The RGB comonents are in the range [0,1].
+   * @brief Class representing a RGB color. The RGB comonents are in the range [0,255].
    */
   struct Color
   {
@@ -93,13 +95,65 @@ namespace GFX {
       return reinterpret_cast<const unsigned int&>(*this);
     }
 
+    inline operator ColorF() const;
+
     unsigned char b; //!< The blue component.
     unsigned char g; //!< The green component.
     unsigned char r; //!< The red component.
     unsigned char a; //!< The alpha component
   };
 
+  /**
+   * @brief Class representing a RGB color with floating points. The RGB comonents are in the range [0,1].
+   */
+  struct ColorF
+  {
+    /**
+     * @brief Constructor.
+     *
+     * @param r_ The red component.
+     * @param g_ The green component.
+     * @param b_ The blue component.
+     */
+    ColorF(double r_ = 0, double g_ = 0, double b_ = 0, double a_ = 0) : r(r_), g(g_), b(b_), a(a_)
+    {
+    }
+
+    operator Color() const
+    {
+      return Color(std::min(255 * r, 255.0), std::min(255 * g, 255.0), std::min(255 * b, 255.0), std::min(255 * a, 255.0));
+    }
+
+    void clamp()
+    {
+      if (r > 1.0)
+        r = 1.0;
+      if (g > 1.0)
+        g = 1.0;
+      if (b > 1.0)
+        b = 1.0;
+      if (a > 1.0)
+        a = 1.0;
+    }
+
+    double r; //!< The red component.
+    double g; //!< The green component.
+    double b; //!< The blue component.
+    double a; //!< The alpha component
+  };
+    
+  Color::operator ColorF() const
+  {
+    double f = 1.0 / 255.0;
+    return ColorF(r * f, g * f, b * f, a * f);
+  }
+
   inline std::ostream& operator<<(std::ostream &os, const Color &color)
+  {
+    return os << "rgb(" << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")";
+  }
+
+  inline std::ostream& operator<<(std::ostream &os, const ColorF &color)
   {
     return os << "rgb(" << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")";
   }
