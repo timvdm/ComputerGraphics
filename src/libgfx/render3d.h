@@ -111,7 +111,12 @@ namespace GFX {
         const vec4 &A, const vec4 &B, const vec4 &C,
         Real a, Real b, Real c)
     {
-      return nA;
+      vec4 n(A.x() * a + B.x() * b + C.x() * c,
+             A.y() * a + B.y() * b + C.y() * c,
+             A.z() * a + B.z() * b + C.z() * c,
+             A.w() * a + B.w() * b + C.w() * c);
+      n.normalize();
+      return n;
     }
 
     template<int I = 0, typename... Tp>
