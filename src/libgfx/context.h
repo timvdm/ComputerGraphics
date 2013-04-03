@@ -3,6 +3,7 @@
 
 #include "buffer.h"
 #include "color.h"
+#include "texture.h"
 
 #include <iostream>
 
@@ -111,9 +112,27 @@ namespace GFX {
         m_colorBuffer(x, y) = color;
       }
 
+      const std::vector<Texture>& textures() const
+      {
+        return m_textures;
+      }
+
+      void createTexture(const std::string &filename)
+      {
+        m_textures.resize(m_textures.size() + 1);
+        m_textures.back().open(filename);
+      }
+
+      void setMipmaps(int x, int y)
+      {
+        for (std::size_t i = 0; i < m_textures.size(); ++i)
+          m_textures[i].setMipmap(x, y);
+      }
+
     private:
       Buffer<Color> m_colorBuffer;
       Buffer<Real> m_zBuffer;
+      std::vector<Texture> m_textures;
       Real m_near;
       int m_width;
       int m_height;

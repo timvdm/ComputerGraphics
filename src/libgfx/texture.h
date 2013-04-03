@@ -13,35 +13,37 @@ namespace GFX {
       {
       }
 
-      Texture(const std::string &filename)
+      Texture(const std::string &filename) : m_mipmap(0)
       {
         open(filename);
       }
 
       bool open(const std::string &filename);
 
-      void mipmap();
-
       int width() const
       {
-        return m_textures[0].width();
+        return m_textures[m_mipmap].width();
       }
 
       int height() const
       {
-        return m_textures[0].height();
+        return m_textures[m_mipmap].height();
       }
 
       const Color& operator()(Real u, Real v) const
       {
-        int x = static_cast<int>(u * m_textures[0].width()) % m_textures[0].width();
-        int y = static_cast<int>(v * m_textures[0].height()) % m_textures[0].height();
-        return m_textures[0](x, y);
+        int x = static_cast<int>(u * m_textures[m_mipmap].width()) % m_textures[m_mipmap].width();
+        int y = static_cast<int>(v * m_textures[m_mipmap].height()) % m_textures[m_mipmap].height();
+        assert(m_textures.size());
+        return m_textures[m_mipmap](x, y);
       }
+
+      void mipmap();
+      void setMipmap(int x, int y);
 
     private:
       std::vector<Buffer<Color> > m_textures;
-      std::vector<int> m_mipmap;
+      std::size_t m_mipmap;
   };
 
 }

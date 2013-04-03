@@ -35,10 +35,6 @@ struct TextureFragmentShader
 {
   typedef std::tuple<GFX::TexCoord> varying_type;
 
-  TextureFragmentShader(const std::vector<GFX::Texture> &textures) : u_textures(textures), u_activeTexture(0)
-  {
-  }
-
   GFX::Color texel(double u, double v) const
   {
     bool i = static_cast<int>(u * 10) % 2;
@@ -48,13 +44,12 @@ struct TextureFragmentShader
     return GFX::Color::blue();
   }
 
-  GFX::Color exec(const varying_type &varying, bool backFace = false)
+  GFX::Color exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, bool backFace = false)
   {
     const GFX::TexCoord &uv = std::get<0>(varying);
-    return u_textures[u_activeTexture](uv.u, uv.v);
+    return textures[u_activeTexture](uv.u, uv.v);
   }
 
-  const std::vector<GFX::Texture> &u_textures;
   std::size_t u_activeTexture;
 };
 
@@ -62,26 +57,15 @@ struct TextureFragmentShader
 
 TextureWidget::TextureWidget(int width, int height, QWidget *parent) : GfxWidget(width, height, parent)
 {
-  //std::cout << "TextureWidget::TextureWidget()" << std::endl;
-  /*
-  m_textures.resize(3);
-  m_textures[0].open("bricks.bmp3");
-  m_textures[1].open("roof.bmp3");
-  m_textures[2].open("grass.bmp3");
-  */
-  m_textures.resize(1);
-  m_textures[0].open("house.bmp3");
+  context().createTexture("house.bmp3");
 }
 
 void TextureWidget::render()
 {
-  //if (m_texture.width() * m_texture.height() == 0)
-  //  return;
-
   typedef GFX::context_traits<TextureVertexShader, TextureFragmentShader> T;
 
   T::vertex_shader_type   vertexShader;
-  T::fragment_shader_type fragmentShader(m_textures);
+  T::fragment_shader_type fragmentShader;
   T::program_type         program(vertexShader, fragmentShader);
   T::renderer_type        renderer(context(), program);
 

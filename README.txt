@@ -72,3 +72,4 @@ Features
 * Draw 3D lines, triangles and quads (wireframe and shaded)
 * Support for viewports (needed for interactive graphics)
 * Initial support for lighting (ambient + diffuse)
+* Texture mapping (including mipmapping to improve quality)

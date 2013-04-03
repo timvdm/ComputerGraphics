@@ -16,7 +16,6 @@ class TextureWidget : public GfxWidget
     void render();
 
   private:
-    std::vector<GFX::Texture> m_textures;
 };
 
 #endif

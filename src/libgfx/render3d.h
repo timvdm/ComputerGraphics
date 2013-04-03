@@ -294,7 +294,7 @@ namespace GFX {
 
           for (int i = minY; i <= maxY; ++i) {
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(A.x(), i), varying);
-            Color color = m_program.fragmentShader().exec(varying);
+            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(A.x(), i, interpolateLineZ(A.z(), B.z(), i, numY), color);
           }
           return;
@@ -313,7 +313,7 @@ namespace GFX {
 
           for (int i = minX; i <= maxX; ++i) {
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(i, A.y()), varying);
-            Color color = m_program.fragmentShader().exec(varying);
+            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(i, A.y(), interpolateLineZ(A.z(), B.z(), i, numX), color);
           }
           return;
@@ -336,7 +336,7 @@ namespace GFX {
               continue;
 
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            Color color = m_program.fragmentShader().exec(varying);
+            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
         } else if (m > 1.0) {
@@ -349,7 +349,7 @@ namespace GFX {
               continue;
 
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            Color color = m_program.fragmentShader().exec(varying);
+            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
         } else if (m < -1.0) {
@@ -362,7 +362,7 @@ namespace GFX {
               continue;
 
             callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            Color color = m_program.fragmentShader().exec(varying);
+            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
             m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
           }
         }
@@ -394,6 +394,11 @@ namespace GFX {
         int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
         int maxY = nearest(std::max(A.y(), std::max(B.y(), C.y())) - 0.5);
 
+        int minX = std::min(A.x(), std::min(B.x(), C.x()));
+        int maxX = std::max(A.x(), std::max(B.x(), C.x()));
+
+        m_context.setMipmaps(maxX - minX, maxY - minY);
+
         if (minY < 0)
           minY = 0;
         if (maxY >= m_context.height())
@@ -420,7 +425,7 @@ namespace GFX {
             impl::callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
 
             // execute fragment shader
-            Color color = m_program.fragmentShader().exec(varying);
+            Color color = m_program.fragmentShader().exec(varying, m_context.textures());
 
             // draw the pixel
             m_context.drawPixel(x, y, z, color);
