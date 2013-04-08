@@ -3,6 +3,7 @@
 
 #include "utility.h"
 #include "context.h"
+#include "transform.h"
 
 #include <limits>
 #include <tuple>
@@ -18,7 +19,7 @@ namespace GFX {
      * @param B The 2D coordinates for the second vertex.
      * @param C The 2D coordinates for the last vertex.
      *
-     * @return The interpolated color.
+     §* @return The interpolated color.
      */
     Real triangleArea(const Point2D &A, const vec4 &B, const vec4 &C)
     {
@@ -56,6 +57,16 @@ namespace GFX {
       callInterpolationFunction<I + 1, Tp...>(varyingA, varyingB, A, B, C, varying);
     }
 
+
+    /**
+     * @brief Interpolate Real across triangle.
+     */
+    Real interpolateVarying(Real rA, Real rB, Real rC,
+        const vec4 &A, const vec4 &B, const vec4 &C,
+        Real a, Real b, Real c)
+    {
+      return rA * a + rB * b + rC * c;
+    }
 
     /**
      * @brief Interpolate a ColorF across a triangle using barycentric interpolation.
@@ -111,12 +122,17 @@ namespace GFX {
         const vec4 &A, const vec4 &B, const vec4 &C,
         Real a, Real b, Real c)
     {
-      vec4 n(A.x() * a + B.x() * b + C.x() * c,
-             A.y() * a + B.y() * b + C.y() * c,
-             A.z() * a + B.z() * b + C.z() * c,
-             A.w() * a + B.w() * b + C.w() * c);
-      n.normalize();
-      return n;
+      return nA * a + nB * b + nC * c;
+    }
+
+    /**
+     * @brief Interpolate normals across triangle.
+     */
+    vec3 interpolateVarying(const vec3 &nA, const vec3 &nB, const vec3 &nC,
+        const vec4 &A, const vec4 &B, const vec4 &C,
+        Real a, Real b, Real c)
+    {
+      return nA * a + nB * b + nC * c;
     }
 
     template<int I = 0, typename... Tp>
@@ -270,28 +286,21 @@ namespace GFX {
 
       void drawLine(const Real *attributesA, const Real *attributesB)
       {
+        // varyings to be filled in by vertex shader
         varying_type varyingA;
         varying_type varyingB;
 
-        // execute vertex shader
+        // execute vertex shader (model coordinates -> clip coordinates)
         vec4 A = m_program.vertexShader().exec(attributesA, varyingA);
         vec4 B = m_program.vertexShader().exec(attributesB, varyingB);
 
-        //std::cout << "Line: " << std::endl;
-        //std::cout << "    clip:      " << print(A) << " -> " << print(B) << std::endl;
+        // perspective divide (clip coordinates -> normalized device coordinates (NDC))
+        impl::perspective_divide(A);
+        impl::perspective_divide(B);
 
-        // perspective divide
-        A /= A.w();
-        B /= B.w();
-
-        //std::cout << "    NDC:       " << print(A) << " -> " << print(B) << std::endl;
-
+        // compute screen coordinates (NDC -> screen coordinates)
         screenCoordinates(A);
         screenCoordinates(B);
-
-        //std::cout << "    screen:    " << print(A) << " -> " << print(B) << std::endl;
-
-        //std::cout << "    Color: " << std::get<0>(varyingA) << " -> " << std::get<0>(varyingB) << std::endl;
 
         varying_type varying;
 
@@ -307,9 +316,11 @@ namespace GFX {
             maxY = m_context.height() - 1;
 
           for (int i = minY; i <= maxY; ++i) {
-            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(A.x(), i), varying);
-            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
-            m_context.drawPixel(A.x(), i, interpolateLineZ(A.z(), B.z(), i, numY), color);
+            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, numY);
+            impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(A.x(), i), varying);
+            vec3 pos(A.x(), i, z);
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
+            m_context.drawPixel(pos.x(), pos.y(), pos.z(), color);
           }
           return;
         }
@@ -326,9 +337,11 @@ namespace GFX {
             maxX = m_context.width() - 1;
 
           for (int i = minX; i <= maxX; ++i) {
-            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(i, A.y()), varying);
-            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
-            m_context.drawPixel(i, A.y(), interpolateLineZ(A.z(), B.z(), i, numX), color);
+            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, numX);
+            impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(i, A.y()), varying);
+            vec3 pos(i, A.y(), z);
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
+            m_context.drawPixel(pos.x(), pos.y(), pos.z(), color);
           }
           return;
         }
@@ -349,9 +362,11 @@ namespace GFX {
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
-            m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
+            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, num);
+            impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
+            vec3 pos(x, y, z);
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
+            m_context.drawPixel(pos.x(), pos.y(), pos.z(), color);
           }
         } else if (m > 1.0) {
           int num = B.y() - A.y() + 1;
@@ -362,9 +377,11 @@ namespace GFX {
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
-            m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
+            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, num);
+            impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
+            vec3 pos(x, y, z);
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
+            m_context.drawPixel(pos.x(), pos.y(), pos.z(), color);
           }
         } else if (m < -1.0) {
           int num = A.y() - B.y() + 1;
@@ -375,11 +392,25 @@ namespace GFX {
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
-            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
-            m_context.drawPixel(x, y, interpolateLineZ(A.z(), B.z(), i, num), color);
+            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, num);
+            impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
+            vec3 pos(x, y, z);
+            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
+            m_context.drawPixel(pos.x(), pos.y(), pos.z(), color);
           }
         }
+      }
+
+      bool clip(const vec4 &v)
+      {
+        Real w = std::abs(v.w());
+        if (v.x() < -w || v.x() > w)
+          return true;
+        if (v.y() < -w || v.y() > w)
+          return true;
+        if (v.z() < -w || v.z() > w)
+          return true;
+        return false;
       }
 
       void drawTriangle(const Real *attributesA, const Real *attributesB, const Real *attributesC)
@@ -393,6 +424,12 @@ namespace GFX {
         vec4 A = m_program.vertexShader().exec(attributesA, varyingA);
         vec4 B = m_program.vertexShader().exec(attributesB, varyingB);
         vec4 C = m_program.vertexShader().exec(attributesC, varyingC);
+        
+        //std::cout << "z: " << A.z() << ", " << B.z() << ", " << C.z() << std::endl;
+        //std::cout << "w: " << A.w() << ", " << B.w() << ", " << C.w() << std::endl;
+
+        //if (clip(A) || clip(B) || clip(C))
+        //  return;
 
         // perspective divide (clip coordinates -> normalized device coordinates (NDC))
         impl::perspective_divide(A);
@@ -404,12 +441,28 @@ namespace GFX {
         screenCoordinates(B);
         screenCoordinates(C);
 
+        // compute face normal
         GFX::vec3 u = GFX::vec3(B.data()) - GFX::vec3(A.data());
         GFX::vec3 v = GFX::vec3(C.data()) - GFX::vec3(A.data());
         GFX::vec3 w = u.cross(v);
         Real angle = w.dot(GFX::vec3(0, 0, -1));
-        if (angle < 0)
-          return;
+        bool backFacing = angle < 0;
+
+        // perform face culling
+        switch (m_context.flags(GFX_FACE_CULLING)) {
+          case GFX_FRONT_FACE:
+            if (!backFacing)
+              return;
+            break;
+          case GFX_BACK_FACE:
+            if (backFacing)
+              return;
+            break;
+          case GFX_FRONT_FACE | GFX_BACK_FACE:
+            return;
+          default:
+            break;
+        }
 
 
         // determine y range in screen coordinates
@@ -442,16 +495,21 @@ namespace GFX {
             impl::barycentric_coeff(A, B, C, GFX::Point2D(x, y), a, b, c);
 
             // interpolate 1/z
-            Real z = (1.0 / A.z()) * a + (1.0 / B.z()) * b + (1.0 / C.z()) * c;
+            //Real z = 1.0 / ((1.0 / A.z()) * a + (1.0 / B.z()) * b + (1.0 / C.z()) * c);
+            Real z = A.z() * a + B.z() * b + C.z() * c;
 
-            // interpolate varyings
-            impl::callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
+            vec3 pos(x, y, z);
 
-            // execute fragment shader
-            ColorF color = m_program.fragmentShader().exec(varying, m_context.textures());
+            if (m_context.flags(GFX_BUFFER) & GFX_COLOR_BUFFER) {
+              // interpolate varyings
+              impl::callInterpolationFunction(varyingA, varyingB, varyingC, A, B, C, a, b, c, varying);
 
-            // draw the pixel
-            m_context.drawPixel(x, y, z, color);
+              // execute fragment shader
+              ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, backFacing);
+
+              // draw the pixel
+              m_context.drawPixel(pos.x(), pos.y(), pos.z(), color);
+            }
           }
         }
       }

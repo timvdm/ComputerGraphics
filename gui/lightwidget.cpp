@@ -70,7 +70,7 @@ struct PerVertexLightFragmentShader
 {
   typedef std::tuple<GFX::ColorF> varying_type;
 
-  GFX::ColorF exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, bool backFace = false)
+  GFX::ColorF exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, GFX::vec3 &pos, bool backFace = false)
   {
     return std::get<0>(varying);
   }
@@ -106,7 +106,7 @@ struct PerFragmentLightVertexShader
 
     // calculate and normalize eye space normal
     GFX::vec3 ecNormal(vec4to3(u_mv * mcNormal));
-    ecNormal.normalize();
+    //ecNormal.normalize();
 
     std::get<0>(varying) = ecNormal;
     
@@ -123,12 +123,14 @@ struct PerFragmentLightFragmentShader
 {
   typedef std::tuple<GFX::vec3> varying_type;
 
-  GFX::ColorF exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, bool backFace = false)
+  GFX::ColorF exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, GFX::vec3 &pos, bool backFace = false)
   {
     using namespace GFX::ShaderFunctions;
 
-    // normal in model coordinates
-    GFX::Real ecNormalDotLightDirection = max(0.0, dot(std::get<0>(varying), u_light.direction));
+    GFX::vec3 ecNormal = std::get<0>(varying);
+    ecNormal.normalize();
+
+    GFX::Real ecNormalDotLightDirection = max(0.0, dot(ecNormal, u_light.direction));
 
     // ambient light
     GFX::vec4 ambient = u_light.light.ambient.array() * u_material.ambient.array();
@@ -152,6 +154,8 @@ struct PerFragmentLightFragmentShader
 
 LightWidget::LightWidget(int width, int height, QWidget *parent) : GfxWidget(width, height, parent)
 {
+  setEyeZ(3);
+
   std::shared_ptr<GFX::Mesh> sphere = GFX::Mesh::sphere(2);
   sphere->triangulate();
   sphere->computeNormals(true);
@@ -162,7 +166,8 @@ LightWidget::LightWidget(int width, int height, QWidget *parent) : GfxWidget(wid
 
 void LightWidget::render()
 {
-  typedef GFX::context_traits<PerVertexLightVertexShader, PerVertexLightFragmentShader> T;
+  //typedef GFX::context_traits<PerVertexLightVertexShader, PerVertexLightFragmentShader> T;
+  typedef GFX::context_traits<PerFragmentLightVertexShader, PerFragmentLightFragmentShader> T;
 
   T::vertex_shader_type   vertexShader;
   T::fragment_shader_type fragmentShader;
@@ -174,8 +179,10 @@ void LightWidget::render()
   context().clearZBuffer();
 
   // setup light
-  vertexShader.u_material = GFX::Material(GFX::vec4(0.2, 0.0, 0.0, 0.0), GFX::vec4(0.8, 0.0, 0.0, 0.0), GFX::vec4());
-  vertexShader.u_light = GFX::DirectionalLight(GFX::vec3(0, 1, 1).normalized(), GFX::LightSource(GFX::vec4(1.0, 0.0, 0.0, 0.0), GFX::vec4(1.0, 0.0, 0.0, 0.0), GFX::vec4()));
+  //vertexShader.u_material = GFX::Material(GFX::vec4(0.2, 0.0, 0.0, 0.0), GFX::vec4(0.8, 0.0, 0.0, 0.0), GFX::vec4());
+  //vertexShader.u_light = GFX::DirectionalLight(GFX::vec3(0, 1, -1).normalized(), GFX::LightSource(GFX::vec4(1.0, 0.0, 0.0, 0.0), GFX::vec4(1.0, 0.0, 0.0, 0.0), GFX::vec4()));
+  fragmentShader.u_material = GFX::Material(GFX::vec4(0.2, 0.0, 0.0, 0.0), GFX::vec4(0.8, 0.0, 0.0, 0.0), GFX::vec4());
+  fragmentShader.u_light = GFX::DirectionalLight(GFX::vec3(0, 1, 1).normalized(), GFX::LightSource(GFX::vec4(1.0, 0.0, 0.0, 0.0), GFX::vec4(1.0, 0.0, 0.0, 0.0), GFX::vec4()));
 
   // create transformation matrices
   GFX::mat4 rotateX = GFX::rotationMatrix(-angleX(), 0, 1, 0);
@@ -189,6 +196,18 @@ void LightWidget::render()
 
   // draw the sphere
   renderer.drawTriangles(&m_attributes[0], m_attributes.size(), 6);
+
+  /*
+  double ground[] = {
+     2, -1,  2,  0,  1,  0,
+    -2, -1,  2,  0,  1,  0,
+    -2, -1, -2,  0,  1,  0,
+     2, -1, -2,  0,  1,  0
+  };
+  
+  renderer.drawQuads(ground, 24, 6);
+  */
+
 
   copyColorBufferToImage();
 }

@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 project(GfxGui)
 
 set(programs
+  axis
   texture
   light
+  shadow
+  pdb
 )
 
 

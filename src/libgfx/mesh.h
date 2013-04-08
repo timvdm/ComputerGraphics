@@ -153,9 +153,9 @@ namespace GFX {
 
       void triangulate();
 
-      std::vector<Real> triangleAttributes(bool normals = false, bool colors = false, bool texCoords = false);
+      std::vector<Real> triangleAttributes(bool normals = false, bool colors = false, bool texCoords = false, std::size_t extra = 0);
 
-      std::vector<Real> quadAttributes(bool normals = false, bool colors = false, bool texCoords = false);
+      std::vector<Real> quadAttributes(bool normals = false, bool colors = false, bool texCoords = false, std::size_t extra = 0);
 
 
       static Face make_face(int i, int j, int k = -1, int l = -1, int m = -1);

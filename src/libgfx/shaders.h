@@ -14,6 +14,28 @@ namespace GFX {
    */
   namespace ShaderFunctions {
 
+    inline std::string vec2_string(const vec2 &v)
+    {
+      std::stringstream ss;
+      ss << "(" << v.x() << ", " << v.y() << ")";
+      return ss.str();
+    }
+
+    inline std::string vec3_string(const vec3 &v)
+    {
+      std::stringstream ss;
+      ss << "(" << v.x() << ", " << v.y() << ", " << v.z() << ")";
+      return ss.str();
+    }
+
+    inline std::string vec4_string(const vec4 &v)
+    {
+      std::stringstream ss;
+      ss << "(" << v.x() << ", " << v.y() << ", " << v.z() << ", " << v.w() << ")";
+      return ss.str();
+    }
+
+
     inline vec2 vec4to2(const vec4 &v)
     {
       return vec2(v.x(), v.y());

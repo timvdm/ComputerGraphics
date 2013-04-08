@@ -31,6 +31,11 @@ class GfxWidget : public QLabel
       return m_eyeZ;
     }
 
+    void setEyeZ(double eyeZ)
+    {
+      m_eyeZ = eyeZ;
+    }
+
     const GFX::Context& context() const
     {
       return m_context;
@@ -52,6 +57,12 @@ class GfxWidget : public QLabel
     }
     
     void copyColorBufferToImage();
+
+    void updatePixmap(int index, const GFX::Buffer<GFX::Real> &zBuffer);
+
+    void updatePixmap(int index, const GFX::Buffer<GFX::Color> &buffer);
+
+    void updatePixmap(int index, const QPixmap &pixmap);
     
   protected:
     virtual void paintEvent(QPaintEvent *painter);
@@ -72,6 +83,8 @@ class GfxWidget : public QLabel
     GFX::Point2D m_mousePos;
     GFX::FramesPerSecond m_fps;
     bool m_dragging;
+
+    std::vector<QLabel*> m_pixmaps;
 };
 
 #endif

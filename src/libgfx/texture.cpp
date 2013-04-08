@@ -6,7 +6,7 @@
 
 namespace GFX {
 
-  bool Texture::open(const std::string &filename)
+  bool Texture::open(const std::string &filename, bool mipMap)
   {
     //std::cout << "Texture::open()" << std::endl;
 
@@ -31,7 +31,8 @@ namespace GFX {
         m_textures[0](x, y) = Color(color.red, color.green, color.blue, 255);
       }
 
-    mipmap();
+    if (mipMap)
+      mipmap();
 
     return true;
   }

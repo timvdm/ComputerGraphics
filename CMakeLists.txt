@@ -11,10 +11,11 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 set(libgfx_SRCS
+  src/libgfx/EasyImage.cc
   src/libgfx/transform.cpp
   src/libgfx/mesh.cpp
   src/libgfx/texture.cpp
-  src/libgfx/EasyImage.cc
+  src/libgfx/ambientocclusion.cpp
 )
 
 add_library(libgfx SHARED ${libgfx_SRCS})

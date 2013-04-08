@@ -23,7 +23,7 @@ namespace GFX {
      * @param g_ The green component.
      * @param b_ The blue component.
      */
-    Color(unsigned char r_ = 0, unsigned char g_ = 0, unsigned char b_ = 0, unsigned char a_ = 0) : r(r_), g(g_), b(b_), a(a_)
+    Color(unsigned char r_ = 0, unsigned char g_ = 0, unsigned char b_ = 0, unsigned char a_ = 255) : r(r_), g(g_), b(b_), a(a_)
     {
     }
 
@@ -41,6 +41,13 @@ namespace GFX {
       assert(rgb.size() == 3);
     }
 
+    /**
+     * @return No color, alpha transparancy set to 0.
+     */
+    static Color none()
+    {
+      return Color(0, 0, 0, 0);
+    }
 
     /**
      * @return The color black.
@@ -115,7 +122,7 @@ namespace GFX {
      * @param g_ The green component.
      * @param b_ The blue component.
      */
-    ColorF(double r_ = 0, double g_ = 0, double b_ = 0, double a_ = 0) : r(r_), g(g_), b(b_), a(a_)
+    ColorF(double r_ = 0, double g_ = 0, double b_ = 0, double a_ = 1.0) : r(r_), g(g_), b(b_), a(a_)
     {
     }
 

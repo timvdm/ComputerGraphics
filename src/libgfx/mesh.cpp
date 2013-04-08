@@ -82,7 +82,7 @@ namespace GFX {
     }
   }
 
-  std::vector<Real> Mesh::triangleAttributes(bool normals, bool colors, bool texCoords)
+  std::vector<Real> Mesh::triangleAttributes(bool normals, bool colors, bool texCoords, std::size_t extra)
   {
     std::vector<Real> attr;
 
@@ -97,12 +97,13 @@ namespace GFX {
       addVertexAttributes(attr, i, 0, normals, colors, texCoords);
       addVertexAttributes(attr, i, 1, normals, colors, texCoords);
       addVertexAttributes(attr, i, 2, normals, colors, texCoords);
+      attr.resize(attr.size() + extra);
     }
 
     return attr;
   }
   
-  std::vector<Real> Mesh::quadAttributes(bool normals, bool colors, bool texCoords)
+  std::vector<Real> Mesh::quadAttributes(bool normals, bool colors, bool texCoords, std::size_t extra)
   {
     std::vector<Real> attr;
 
@@ -118,6 +119,7 @@ namespace GFX {
       addVertexAttributes(attr, i, 1, normals, colors, texCoords);
       addVertexAttributes(attr, i, 2, normals, colors, texCoords);
       addVertexAttributes(attr, i, 3, normals, colors, texCoords);
+      attr.resize(attr.size() + extra);
     }
 
     return attr;

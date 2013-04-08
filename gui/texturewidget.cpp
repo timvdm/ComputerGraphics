@@ -35,7 +35,7 @@ struct TextureFragmentShader
 {
   typedef std::tuple<GFX::TexCoord> varying_type;
 
-  GFX::ColorF exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, bool backFace = false)
+  GFX::ColorF exec(const varying_type &varying, const std::vector<GFX::Texture> &textures, GFX::vec3 &pos, bool backFace = false)
   {
     const GFX::TexCoord &uv = std::get<0>(varying);
     return textures[u_activeTexture](uv.u, uv.v);
@@ -48,6 +48,7 @@ struct TextureFragmentShader
 
 TextureWidget::TextureWidget(int width, int height, QWidget *parent) : GfxWidget(width, height, parent)
 {
+  setEyeZ(3);
   context().createTexture("house.bmp3");
 }
 
@@ -59,6 +60,8 @@ void TextureWidget::render()
   T::fragment_shader_type fragmentShader;
   T::program_type         program(vertexShader, fragmentShader);
   T::renderer_type        renderer(context(), program);
+
+  //context().set(GFX::GFX_FACE_CULLING, GFX::GFX_FRONT_FACE);
 
   context().clearColorBuffer(GFX::Color::black());
   context().clearZBuffer();
@@ -74,69 +77,69 @@ void TextureWidget::render()
   // x, y, z, u, v
   double walls[] = {
     // front
-    -2, -1, -1,       0, 0.5,
-     2, -1, -1, 2 / 3.0, 0.5,
-     2,  1, -1, 2 / 3.0,   1,
+    -2, -1,  1,       0, 0.5,
+     2, -1,  1, 2 / 3.0, 0.5,
+     2,  1,  1, 2 / 3.0,   1,
 
-    -2, -1, -1,       0, 0.5,
-     2,  1, -1, 2 / 3.0,   1,
-    -2,  1, -1,       0,   1,
+    -2, -1,  1,       0, 0.5,
+     2,  1,  1, 2 / 3.0,   1,
+    -2,  1,  1,       0,   1,
 
     // right
      2, -1, -1, 2 / 3.0, 0.5,
-     2, -1,  1,       1, 0.5,
      2,  1,  1,       1,   1,
+     2, -1,  1,       1, 0.5,
      
      2, -1, -1, 2 / 3.0, 0.5,
-     2,  1,  1,       1,   1,
      2,  1, -1, 2 / 3.0,   1,
+     2,  1,  1,       1,   1,
 
     // back
-     2, -1,  1, 1 / 3.0, 0.5,
-    -2, -1,  1,       1, 0.5,
-    -2,  1,  1,       1,   1,
-
-     2, -1,  1, 1 / 3.0, 0.5,
-    -2,  1,  1,       1,   1,
-     2,  1,  1, 1 / 3.0,   1,
-
-    // left
-    -2, -1,  1, 2 / 3.0, 0.5,
+     2, -1, -1, 1 / 3.0, 0.5,
     -2, -1, -1,       1, 0.5,
     -2,  1, -1,       1,   1,
 
+     2, -1, -1, 1 / 3.0, 0.5,
+    -2,  1, -1,       1,   1,
+     2,  1, -1, 1 / 3.0,   1,
+
+    // left
     -2, -1,  1, 2 / 3.0, 0.5,
     -2,  1, -1,       1,   1,
+    -2, -1, -1,       1, 0.5,
+
+    -2, -1,  1, 2 / 3.0, 0.5,
     -2,  1,  1, 2 / 3.0,   1,
+    -2,  1, -1,       1,   1,
 
     // left triangle
     -2,  1,  1, 2 / 3.0,  0.5,
-    -2,  1, -1,       1,  0.5,
     -2,  2,  0, 5 / 6.0, 0.75,
+    -2,  1, -1,       1,  0.5,
 
     // right triangle
      2,  1, -1, 2 / 3.0,  0.5,
+     2,  2,  0, 5 / 6.0, 0.75,
      2,  1,  1,       1,  0.5,
-     2,  2,  0, 5 / 6.0, 0.75
   };
 
   double roof[] = {
-    -2,  1, -1, 1 / 3.0,   0,
-     2,  1, -1,       1,   0,
-     2,  2,  0,       1, 0.5,
     -2,  2,  0, 1 / 3.0, 0.5,
+     2,  2,  0,       1, 0.5,
+     2,  1, -1,       1,   0,
+    -2,  1, -1, 1 / 3.0,   0,
 
-     2,  1,  1, 1 / 3.0,   0,
-    -2,  1,  1,       1,   0,
+     2,  2,  0, 1 / 3.0, 0.5,
     -2,  2,  0,       1, 0.5,
-     2,  2,  0, 1 / 3.0, 0.5
+    -2,  1,  1,       1,   0,
+     2,  1,  1, 1 / 3.0,   0
   };
 
   double ground[] = {
-    -3, -1, -3,       0, 0.5,
-     3, -1, -3, 1 / 3.0, 0.5,
+    -3, -1,  3,       0,   0,
      3, -1,  3, 1 / 3.0,   0,
-    -3, -1,  3,       0,   0
+     3, -1, -3, 1 / 3.0, 0.5,
+    -3, -1, -3,       0, 0.5
   };
 
 
@@ -174,6 +177,8 @@ void TextureWidget::render()
       vertexShader.u_mvp = save;
     }
   */
+
+  updatePixmap(0, context().zBuffer());
 
   copyColorBufferToImage();
 }

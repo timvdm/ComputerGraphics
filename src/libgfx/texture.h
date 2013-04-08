@@ -13,12 +13,17 @@ namespace GFX {
       {
       }
 
-      Texture(const std::string &filename) : m_mipmap(0)
+      Texture(int width, int height) : m_mipmap(0)
       {
-        open(filename);
+        m_textures.push_back(Buffer<Color>(width, height));
       }
 
-      bool open(const std::string &filename);
+      Texture(const std::string &filename, bool mipMap = true) : m_mipmap(0)
+      {
+        open(filename, mipMap);
+      }
+
+      bool open(const std::string &filename, bool mipMap = true);
 
       int width() const
       {
