@@ -14,6 +14,21 @@ namespace GFX {
       {
       }
 
+      Buffer(const Buffer<ValueType> &other)
+      {
+        m_buffer = other.m_buffer;
+        m_width = other.m_width;
+        m_height = other.m_height;
+      }
+
+      Buffer& operator=(const Buffer<ValueType> &other)
+      {
+        m_buffer = other.m_buffer;
+        m_width = other.m_width;
+        m_height = other.m_height;
+        return *this;
+      }
+
       int width() const
       {
         return m_width;
@@ -22,6 +37,13 @@ namespace GFX {
       int height() const
       {
         return m_height;
+      }
+
+      void resize(int width, int height)
+      {
+        m_width = width;
+        m_height = height;
+        m_buffer.resize(width * height);
       }
 
       const ValueType& operator()(int x, int y) const
@@ -45,7 +67,6 @@ namespace GFX {
     private:
       std::size_t index(int x, int y) const
       {
-        //return m_height * x + y;
         return x + m_width * y;
       }
 

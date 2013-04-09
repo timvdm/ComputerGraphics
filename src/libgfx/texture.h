@@ -23,6 +23,19 @@ namespace GFX {
         open(filename, mipMap);
       }
 
+      Texture(const Texture &other)
+      {
+        m_textures = other.m_textures;
+        m_mipmap = other.m_mipmap;
+      }
+
+      Texture& operator=(const Texture &other)
+      {
+        m_textures = other.m_textures;
+        m_mipmap = other.m_mipmap;
+        return *this;
+      }
+
       bool open(const std::string &filename, bool mipMap = true);
 
       int width() const
@@ -37,9 +50,11 @@ namespace GFX {
 
       const Color& operator()(Real u, Real v) const
       {
+        assert(m_mipmap < m_textures.size());
         int x = static_cast<int>(u * m_textures[m_mipmap].width()) % m_textures[m_mipmap].width();
         int y = static_cast<int>(v * m_textures[m_mipmap].height()) % m_textures[m_mipmap].height();
-        assert(m_textures.size());
+        assert(x < m_textures[m_mipmap].width());
+        assert(y < m_textures[m_mipmap].height());
         return m_textures[m_mipmap](x, y);
       }
 

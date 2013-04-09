@@ -12,7 +12,7 @@ namespace GFX {
   enum ContextFlagTypes {
     GFX_BUFFER = 0,
     GFX_FACE_CULLING = 1,
-  
+
     LastFlagType
   };
 
@@ -41,6 +41,31 @@ namespace GFX {
         enable(GFX_FACE_CULLING, GFX_BACK_FACE);
       }
 
+      Context(const Context &other)
+      {
+        m_colorBuffer = other.m_colorBuffer;
+        m_zBuffer = other.m_zBuffer;
+        m_textures = other.m_textures;
+        m_near = other.m_near;
+        m_width = other.m_width;
+        m_height = other.m_height;
+        for (int i = 0; i < LastFlagType; ++i)
+          m_flags[i] = other.m_flags[i];
+      }
+
+      Context& operator=(const Context &other)
+      {
+        m_colorBuffer = other.m_colorBuffer;
+        m_zBuffer = other.m_zBuffer;
+        m_textures = other.m_textures;
+        m_near = other.m_near;
+        m_width = other.m_width;
+        m_height = other.m_height;
+        for (int i = 0; i < LastFlagType; ++i)
+          m_flags[i] = other.m_flags[i];
+        return *this;
+      }
+
       int width() const
       {
         return m_width;
@@ -49,6 +74,14 @@ namespace GFX {
       int height() const
       {
         return m_height;
+      }
+
+      void resize(int width, int height)
+      {
+        m_width = width;
+        m_height = height;
+        m_zBuffer.resize(width, height);
+        m_colorBuffer.resize(width, height);
       }
 
       Real near() const

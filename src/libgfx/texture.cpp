@@ -87,6 +87,7 @@ namespace GFX {
         sizes.push_back(std::abs(m_textures[i].height() - y));
 
     m_mipmap = std::min_element(sizes.begin(), sizes.end()) - sizes.begin();
+    assert(m_mipmap < m_textures.size());
   }
 
 }
