@@ -60,7 +60,8 @@ void AxisWidget::render()
   mat4 rotateX = rotationMatrix(-angleX(), 0, 1, 0);
   mat4 rotateY = rotationMatrix(angleY(), 1, 0, 0);
 
-  mat4 project = frustumMatrix(-1, 1, -1, 1, 1.0, 10);
+  Real aspect = static_cast<Real>(context().width()) / context().height();
+  mat4 project = frustumMatrix(-aspect, aspect, -1, 1, 1.0, 10);
   mat4 view = lookAtMatrix(0, 0, 3, 0, 0, 0, 0, 1, 0); // view along reverse z-axis
 
   vertexShader.u_mvp = project * view * rotateX * rotateY;

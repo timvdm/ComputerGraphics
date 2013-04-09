@@ -25,16 +25,19 @@ if (QT4_FOUND)
   include(${QT_USE_FILE})
   add_definitions(${QT_DEFINITIONS})
 
+  set(gfxwidget_HDRS gfxwidget.h)
+  set(gfxwidget_SRCS gfxwidget.cpp)
+  qt4_wrap_cpp(gfxwidget_HDRS_MOC ${gfxwidget_HDRS})
+  add_library(gfxwidget STATIC ${gfxwidget_SRCS} ${gfxwidget_HDRS_MOC})
+
   foreach(prog ${programs})
 
     set(${prog}_HDRS
-      gfxwidget.h
       ${prog}widget.h
     )
 
     set(${prog}_SRCS
       libgfx/
-      gfxwidget.cpp
       ${prog}.cpp
       ${prog}widget.cpp
     )
@@ -42,7 +45,7 @@ if (QT4_FOUND)
     qt4_wrap_cpp(${prog}_HDRS_MOC ${${prog}_HDRS})
 
     add_executable(${prog} ${${prog}_SRCS} ${${prog}_HDRS_MOC})
-    target_link_libraries(${prog} libgfx ${QT_LIBRARIES})
+    target_link_libraries(${prog} libgfx gfxwidget ${QT_LIBRARIES})
 
   endforeach()
 

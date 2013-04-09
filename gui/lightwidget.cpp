@@ -187,7 +187,8 @@ void LightWidget::render()
   // create transformation matrices
   GFX::mat4 rotateX = GFX::rotationMatrix(-angleX(), 0, 1, 0);
   GFX::mat4 rotateY = GFX::rotationMatrix(angleY(), 1, 0, 0);
-  GFX::mat4 project = GFX::frustumMatrix(-1, 1, -1, 1, 1.0, 10);
+  GFX::Real aspect = static_cast<GFX::Real>(context().width()) / context().height();
+  GFX::mat4 project = GFX::frustumMatrix(-aspect, aspect, -1, 1, 1.0, 10);
   GFX::mat4 view = GFX::lookAtMatrix(0, 0, eyeZ(), 0, 0, 0, 0, 1, 0);
 
   // set vertex shader's matrices

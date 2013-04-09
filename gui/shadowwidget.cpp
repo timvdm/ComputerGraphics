@@ -151,7 +151,8 @@ void ShadowWidget::createShadowMap()
   // create transformation matrices
   mat4 view = lookAtMatrix(0, 0, 3, 0, 0, 0, 0, 1, 0);
   //mat4 project = orthoMatrix(-2, 2, -2, 2, 1.0, 10);
-  mat4 project = frustumMatrix(-1, 1, -1, 1, 1.0, 10);
+  Real aspect = static_cast<Real>(context().width()) / context().height();
+  mat4 project = frustumMatrix(-aspect, aspect, -1, 1, 1.0, 10);
   mat4 trans = translationMatrix(0, 0, 0);
 
 

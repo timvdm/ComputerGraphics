@@ -8,7 +8,7 @@ GfxWidget::GfxWidget(int width, int height, QWidget *parent) : QLabel(parent),
   setPixmap(pm);
   m_angleX = m_angleY = 0.0;
 }
-    
+
 void GfxWidget::copyColorBufferToImage()
 {
   for (int i = 0; i < m_context.width(); ++i)
@@ -17,7 +17,7 @@ void GfxWidget::copyColorBufferToImage()
       //image().setPixel(i, m_context.height() - j - 1, color.toARGB());
       image().setPixel(i, j, color.toARGB());
     }
-  
+
   QPainter painter(this);
   painter.drawImage(0, 0, m_image);
 }
@@ -28,10 +28,10 @@ void GfxWidget::mouseMoveEvent(QMouseEvent *event)
 
   if (!m_dragging)
     return;
-  
+
   int dx = m_mousePos.x - event->x();
   int dy = m_mousePos.y - event->y();
-  
+
   m_angleX += dx * 5e-3;
   m_angleY += dy * 5e-3;
 
@@ -51,35 +51,38 @@ void GfxWidget::mousePressEvent(QMouseEvent *event)
 void GfxWidget::mouseReleaseEvent(QMouseEvent *event)
 {
   //qDebug() << "mouseReleaseEvent";
-  
+
   m_dragging = false;
-  
+
   int dx = m_mousePos.x - event->x();
   int dy = m_mousePos.y - event->y();
-  
+
   m_angleX += dx * 5e-3;
   m_angleY += dy * 5e-3;
 
   update();
 }
-    
+
 void GfxWidget::wheelEvent(QWheelEvent *event)
 {
   //qDebug() << "delta = " << event->delta();
-  
+
   m_eyeZ += 0.001 * event->delta();
-  
+
   update();
 }
-    
+
 void GfxWidget::paintEvent(QPaintEvent *painter)
 {
+  qDebug() << "paintEvent()";
+
   m_fps.startRender();
-  
+
+  qDebug() << m_context.width() << "x" << m_context.height();
   render();
-  
+
   m_fps.stopRender();
-  
+
   qDebug() << "FPS: " << m_fps.fps();
 }
 
@@ -127,5 +130,13 @@ void GfxWidget::updatePixmap(int index, const QPixmap &pixmap)
     m_pixmaps.push_back(new QLabel);
   m_pixmaps[index]->setPixmap(pixmap);
   m_pixmaps[index]->show();
+}
+
+void GfxWidget::resizeEvent(QResizeEvent *event)
+{
+  qDebug() << "resizeEvent()";
+
+  m_context.resize(width(), height());
+  m_image = QImage(width(), height(), QImage::Format_RGB32);
 }
 

@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 
   QApplication app(argc, argv);
 
-  PDBWidget widget(argv[1], 500, 500);
+  PDBWidget widget(argv[1], 700, 700);
   widget.show();
 
   return app.exec();

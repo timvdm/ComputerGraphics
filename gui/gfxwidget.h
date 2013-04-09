@@ -72,6 +72,8 @@ class GfxWidget : public QLabel
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
 
+    virtual void resizeEvent(QResizeEvent *event);
+
   private:
     GFX::Context m_context;
     QImage m_image;
