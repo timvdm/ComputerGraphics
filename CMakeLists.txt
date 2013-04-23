@@ -10,34 +10,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "-Wno-enum-compare -std=c++11 ${CMAKE_CXX_FLAGS}")
 endif()
 
-set(libgfx_SRCS
-  src/libgfx/EasyImage.cc
-  src/libgfx/transform.cpp
-  src/libgfx/mesh.cpp
-  src/libgfx/texture.cpp
-  src/libgfx/ambientocclusion.cpp
-)
-
-add_library(libgfx SHARED ${libgfx_SRCS})
-
-set(cg_SRCS
-  src/utils/EasyImage.cc
-  src/utils/ini_configuration.cc
-  src/utils/lparser.cc
-  src/utils/vector.cc
-  src/engine.cc
-  src/labo/render.cpp
-  src/labo/LineDrawing.cpp
-  src/labo/LSystem2D.cpp
-  src/labo/LSystem3D.cpp
-  src/labo/Wireframe.cpp
-  src/labo/ZBufferedWireframe.cpp
-  src/labo/ZBuffering.cpp
-)
-
-add_executable(engine ${cg_SRCS})
-target_link_libraries(engine libgfx)
-
+add_subdirectory(src)
+add_subdirectory(libgfx)
 add_subdirectory(gui)
 
 #add_subdirectory(test)

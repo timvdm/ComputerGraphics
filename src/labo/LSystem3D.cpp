@@ -1,7 +1,7 @@
 #include "LSystem3D.h"
 
-#include "../libgfx/mesh.h"
-#include "../libgfx/utility.h"
+#include <libgfx/mesh.h>
+#include <libgfx/utility.h>
 
 #include <fstream>
 #include <cmath>

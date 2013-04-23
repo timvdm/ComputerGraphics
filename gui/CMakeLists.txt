@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(GfxGui)
 
+include_directories(..)
+
 set(programs
   axis
   texture
@@ -8,10 +10,6 @@ set(programs
   shadow
   pdb
 )
-
-
-
-
 
 
 find_package(Qt4)

@@ -1,6 +1,6 @@
 #include "../utils.h"
 #include "../plugin.h"
-#include "../libgfx/utility.h"
+#include <libgfx/utility.h>
 
 #include "render.h"
 

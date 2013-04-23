@@ -1,7 +1,7 @@
 #ifndef INC_LSYSTEM3D_H
 #define INC_LSYSTEM3D_H
 
-#include "../libgfx/mesh.h"
+#include <libgfx/mesh.h>
 #include "../utils.h"
 
 #include <memory>

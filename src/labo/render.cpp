@@ -1,9 +1,9 @@
 #include "render.h"
 
-#include "../libgfx/mesh.h"
-#include "../libgfx/buffer.h"
-#include "../libgfx/utility.h"
-#include "../libgfx/render3d.h"
+#include <libgfx/mesh.h>
+#include <libgfx/buffer.h>
+#include <libgfx/utility.h>
+#include <libgfx/render3d.h>
 
 #include <limits>
 #include <algorithm>

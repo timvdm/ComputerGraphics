@@ -3,8 +3,8 @@
 
 #include "../utils/EasyImage.h"
 
-#include "../libgfx/line2d.h"
-#include "../libgfx/line3d.h"
+#include <libgfx/line2d.h>
+#include <libgfx/line3d.h>
 
 #include <memory>
 
