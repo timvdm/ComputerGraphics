@@ -9,6 +9,7 @@ set(programs
   light
   shadow
   pdb
+  fire
 )
 
 
