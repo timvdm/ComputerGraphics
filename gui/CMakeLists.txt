@@ -4,11 +4,9 @@ project(GfxGui)
 include_directories(..)
 
 set(programs
-  axis
   texture
   light
   shadow
-  pdb
   fire
 )
 
