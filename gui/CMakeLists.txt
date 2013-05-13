@@ -19,10 +19,13 @@ find_package(Qt4)
 if (QT4_FOUND)
   message(STATUS "Qt4 found: building GUI example.")
 
+
   include_directories(../src)
 
   include(${QT_USE_FILE})
   add_definitions(${QT_DEFINITIONS})
+  
+  add_subdirectory(pdbviewer)
 
   set(gfxwidget_HDRS gfxwidget.h)
   set(gfxwidget_SRCS gfxwidget.cpp)

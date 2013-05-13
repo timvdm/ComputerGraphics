@@ -35,7 +35,7 @@ void MainWindow::aoCheckBoxChanged(int state)
   }
   ui->pdb->enableAO(state == Qt::Checked);
   ui->pdb->update();
-  showAmbientOcclusionMaps();
+  //showAmbientOcclusionMaps();
 }
 
 void MainWindow::aoOnlyCheckBoxChanged(int state)
