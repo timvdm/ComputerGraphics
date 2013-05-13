@@ -308,7 +308,7 @@ namespace GFX {
           // special case for A.x() == B.x()
           int minY = nearest(std::min(A.y(), B.y()));
           int maxY = nearest(std::max(A.y(), B.y()));
-          int numY = maxY - minY + 1;
+          int numY = maxY - minY;
 
           if (minY < 0)
             minY = 0;
@@ -316,7 +316,7 @@ namespace GFX {
             maxY = m_context.height() - 1;
 
           for (int i = minY; i <= maxY; ++i) {
-            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, numY);
+            GFX::Real z = interpolateLineZ(A.z(), B.z(), i, numY);
             impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(A.x(), i), varying);
             vec3 pos(A.x(), i, z);
             ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
@@ -329,7 +329,7 @@ namespace GFX {
           // special case for A.y() == B.y()
           int minX = nearest(std::min(A.x(), B.x()));
           int maxX = nearest(std::max(A.x(), B.x()));
-          int numX = maxX - minX + 1;
+          int numX = maxX - minX;
 
           if (minX < 0)
             minX = 0;
@@ -337,7 +337,7 @@ namespace GFX {
             maxX = m_context.width() - 1;
 
           for (int i = minX; i <= maxX; ++i) {
-            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, numX);
+            GFX::Real z = interpolateLineZ(A.z(), B.z(), i, numX);
             impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(i, A.y()), varying);
             vec3 pos(i, A.y(), z);
             ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
@@ -354,7 +354,7 @@ namespace GFX {
 
         Real m = ((Real) B.y() - (Real) A.y()) / ((Real) B.x() - (Real) A.x());
         if (-1.0 <= m && m <= 1.0) {
-          int num = B.x() - A.x() + 1;
+          int num = B.x() - A.x();
           for (int i = 0; i <= (B.x() - A.x()); ++i) {
             int x = A.x() + i;
             int y = round(A.y() + m * i);
@@ -362,14 +362,14 @@ namespace GFX {
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, num);
+            GFX::Real z = interpolateLineZ(A.z(), B.z(), i, num);
             impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
             vec3 pos(x, y, z);
             ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
             m_context.drawPixel(pos.x(), pos.y(), pos.z(), color);
           }
         } else if (m > 1.0) {
-          int num = B.y() - A.y() + 1;
+          int num = B.y() - A.y();
           for (int i = 0; i <= (B.y() - A.y()); ++i) {
             int x = round(A.x() + i / m);
             int y = A.y() + i;
@@ -377,14 +377,14 @@ namespace GFX {
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, num);
+            GFX::Real z = interpolateLineZ(A.z(), B.z(), i, num);
             impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
             vec3 pos(x, y, z);
             ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);
             m_context.drawPixel(pos.x(), pos.y(), pos.z(), color);
           }
         } else if (m < -1.0) {
-          int num = A.y() - B.y() + 1;
+          int num = A.y() - B.y();
           for (int i = 0; i <= (A.y() - B.y()); ++i) {
             int x = round(A.x() - i / m);
             int y = A.y() - i;
@@ -392,7 +392,7 @@ namespace GFX {
             if (x < 0 || x > m_context.width() - 1 || y < 0 || y > m_context.height() - 1)
               continue;
 
-            GFX::Real z = 1.0 / interpolateLineZ(A.z(), B.z(), i, num);
+            GFX::Real z = interpolateLineZ(A.z(), B.z(), i, num);
             impl::callInterpolationFunction(varyingA, varyingB, A, B, Point2D(x, y), varying);
             vec3 pos(x, y, z);
             ColorF color = m_program.fragmentShader().exec(varying, m_context.textures(), pos, false);

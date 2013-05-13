@@ -39,7 +39,7 @@ namespace GFX {
   inline Real interpolateLineZ(Real zA, Real zB, Real step, Real numSteps)
   {
     Real p = step / numSteps;
-    return p / zA + (1.0 - p) / zB;
+    return (1.0 - p) / zA + p / zB;
   }
 
   /**
