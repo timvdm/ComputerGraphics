@@ -1,13 +1,12 @@
 #include "../utils.h"
 #include "../plugin.h"
 
+#include "render.h"
+#include "LSystem3D.h"
+
 #include <libgfx/transform.h>
 #include <libgfx/mesh.h>
 #include <libgfx/utility.h>
-
-#include "LSystem3D.h"
-#include "render.h"
-
 
 namespace CG {
 
@@ -80,6 +79,68 @@ namespace CG {
         mesh_to_lines2d(mesh, color, T, lines);
 
         return true;
+      }
+
+      std::shared_ptr<GFX::Mesh> createFractal(std::vector<GFX::vec4> &points0, std::vector<GFX::Mesh::Face> &faces,
+          int nrIterations, double fractalScale)
+      {
+        // compute center
+        GFX::vec4 center(GFX::vec4::Zero());
+        for (std::size_t i = 0; i < points0.size(); ++i)
+          center += points0[i];
+        // center figure
+        for (std::size_t i = 0; i < points0.size(); ++i)
+          points0[i] -= center;
+
+        std::size_t h = points0.size();
+        std::vector<GFX::vec4> lastPoints = points0, points;
+
+        for (int i = 0; i < nrIterations; ++i) {
+          points.clear();
+
+          for (std::size_t k = 0; k < lastPoints.size(); ++k) {
+            std::size_t j = (k % h);
+            //std::cout << "j = " << j << std::endl;
+
+            // scale initial points
+            std::vector<GFX::vec4> addPoints;
+            for (std::size_t l = 0; l < h; ++l)
+              addPoints.push_back(points0[l] / std::pow(fractalScale, i + 1));
+
+            // translate small figure to origin
+            GFX::vec4 point_j = addPoints[j];
+            for (std::size_t l = 0; l < addPoints.size(); ++l)
+              addPoints[l] -= point_j;
+
+            // translate small figure to point on figure from previous iteration
+            for (std::size_t l = 0; l < addPoints.size(); ++l)
+              points.push_back(addPoints[l] + lastPoints[k]);
+          }
+
+          lastPoints.swap(points);
+        }
+
+        std::size_t f = faces.size();
+        std::size_t numFaces = f * std::pow(h, nrIterations);
+        while (faces.size() < numFaces) {
+          std::size_t offset = faces.size() ? *std::max_element(faces.back().begin(), faces.back().end()) + 1 : 0;
+          for (std::size_t i = 0; i < f; ++i) {
+            faces.resize(faces.size() + 1);
+            for (std::size_t j = 0; j < faces[i].size(); ++j) {
+              //std::cout << offset + faces[i][j] << " ";
+              faces.back().push_back(offset + faces[i][j]);
+            }
+            //std::cout << std::endl;
+          }
+        }
+
+        std::shared_ptr<GFX::Mesh> mesh(new GFX::Mesh);
+        for (std::size_t i = 0; i < lastPoints.size(); ++i)
+          mesh->addVertex(lastPoints[i].x(), lastPoints[i].y(), lastPoints[i].z());
+        for (std::size_t i = 0; i < faces.size(); ++i)
+          mesh->addFace(faces[i]);
+
+        return mesh;
       }
 
       img::EasyImage image(const ini::Configuration &conf)
@@ -174,74 +235,19 @@ namespace CG {
 
             } else if (type == "FractalTetrahedron") {
 
+              std::cout << "Rendering tetrahedron 3D fractal" << std::endl;
+
               std::shared_ptr<GFX::Mesh> tetrahedron = GFX::Mesh::tetrahedron();
 
               int nrIterations = conf[figureName]["nrIterations"];
               double fractalScale = conf[figureName]["fractalScale"];
 
               std::vector<GFX::vec4> points0 = tetrahedron->vertices();
-
-              // compute center
-              GFX::vec4 center(GFX::vec4::Zero());
-              for (std::size_t i = 0; i < points0.size(); ++i)
-                center += points0[i];
-              // center figure
-              for (std::size_t i = 0; i < points0.size(); ++i)
-                points0[i] -= center;
-
-              std::size_t h = points0.size();
-              std::vector<GFX::vec4> lastPoints = points0, points;
-
-              for (int i = 0; i < nrIterations; ++i) {
-                points.clear();
-
-                for (std::size_t k = 0; k < lastPoints.size(); ++k) {
-                  std::size_t j = (k % h);
-                  std::cout << "j = " << j << std::endl;
-
-                  // scale initial points
-                  std::vector<GFX::vec4> addPoints;
-                  for (std::size_t l = 0; l < h; ++l)
-                    addPoints.push_back(points0[l] / std::pow(fractalScale, i + 1));
-
-                  // translate small figure to origin
-                  GFX::vec4 point_j = addPoints[j];
-                  for (std::size_t l = 0; l < addPoints.size(); ++l)
-                    addPoints[l] -= point_j;
-
-                  // translate small figure to point on figure from previous iteration
-                  for (std::size_t l = 0; l < addPoints.size(); ++l)
-                    points.push_back(addPoints[l] + lastPoints[k]);
-                }
-
-                lastPoints.swap(points);
-              }
-
               std::vector<GFX::Mesh::Face> faces = tetrahedron->faces();
 
-              std::size_t f = faces.size();
-              std::size_t numFaces = f * std::pow(h, nrIterations);
-              while (faces.size() < numFaces) {
-                std::size_t offset = faces.size() ? *std::max_element(faces.back().begin(), faces.back().end()) + 1 : 0;
-                for (std::size_t i = 0; i < f; ++i) {
-                  faces.resize(faces.size() + 1);
-                  for (std::size_t j = 0; j < faces[i].size(); ++j) {
-                    std::cout << offset + faces[i][j] << " ";
-                    faces.back().push_back(offset + faces[i][j]);
-                  }
-                  std::cout << std::endl;
-                }
-              }
+              std::shared_ptr<GFX::Mesh> mesh = createFractal(points0, faces, nrIterations, fractalScale);
 
-              GFX::Mesh mesh;
-              for (std::size_t i = 0; i < lastPoints.size(); ++i)
-                mesh.addVertex(lastPoints[i].x(), lastPoints[i].y(), lastPoints[i].z());
-              for (std::size_t i = 0; i < faces.size(); ++i)
-                mesh.addFace(faces[i]);
-
-              std::cout << "faces.size() =  " << faces.size() << std::endl;
-
-              mesh_to_lines2d(mesh, color, project * model, lines);
+              mesh_to_lines2d(*mesh, color, project * model, lines);
             }
 
           } catch (const std::exception &e) {
