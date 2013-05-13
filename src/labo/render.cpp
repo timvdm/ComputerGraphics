@@ -148,7 +148,7 @@ struct Ctx
 void draw_pixel(Ctx &ctx, int x, int y, Real z0, Real z1, Real i, Real a, const Color &color)
 {
   Real p = i / a;
-  Real z = p / z1 + (1.0 - p) / z0;
+  Real z = (1.0 - p) / z0 + p / z1;
   ctx.drawPixel(x, y, z, color);
 }
 
@@ -160,8 +160,8 @@ void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color 
     int maxY = nearest(std::max(p1.y, p2.y));
     int numY = maxY - minY;
 
-    for (int i = minY; i <= maxY; ++i)
-      draw_pixel(ctx, p1.x, i, p1.z, p2.z, i, numY, color);
+    for (int i = 0; i <= (maxY - minY); ++i)
+      draw_pixel(ctx, p1.x, minY + i, p1.z, p2.z, i, numY, color);
     return;
   }
 
@@ -171,8 +171,8 @@ void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color 
     int maxX = nearest(std::max(p1.x, p2.x));
     int numX = maxX - minX;
 
-    for (int i = minX; i <= maxX; ++i)
-      draw_pixel(ctx, i, p1.y, p1.z, p2.z, i, numX, color);
+    for (int i = 0; i <= (maxX - minX); ++i)
+      draw_pixel(ctx, minX + i, p1.y, p1.z, p2.z, i, numX, color);
     return;
   }
 
@@ -187,7 +187,7 @@ void draw_zbuf_line(Ctx &ctx, const Point3D &p1, const Point3D &p2, const Color 
     // flip points if p2.x > p1.x: we want p1.x to have the lowest value
     std::swap(x0, x1);
     std::swap(y0, y1);
-    //std::swap(z0, z1);
+    std::swap(z0, z1);
   }
 
   Real m = ((Real) y1 - (Real) y0) / ((Real) x1 - (Real) x0);
