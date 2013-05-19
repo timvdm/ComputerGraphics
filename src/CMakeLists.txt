@@ -13,6 +13,7 @@ set(cg_SRCS
   labo/Wireframe.cpp
   labo/ZBufferedWireframe.cpp
   labo/ZBuffering.cpp
+  labo/LightedZBuffering.cpp
 )
 
 add_executable(engine ${cg_SRCS})

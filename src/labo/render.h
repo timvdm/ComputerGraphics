@@ -8,6 +8,66 @@
 
 #include <memory>
 
+
+
+struct Material
+{
+  Material(const GFX::ColorF &ambient_ = GFX::Color::black(), const GFX::ColorF &diffuse_ = GFX::Color::black(),
+           const GFX::ColorF &specular_ = GFX::Color::black(), GFX::Real reflection_ = 0.0)
+    : ambient(ambient_), diffuse(diffuse_), specular(specular_), reflection(reflection_)
+  {
+  }
+
+  GFX::ColorF ambient;
+  GFX::ColorF diffuse;
+  GFX::ColorF specular;
+  GFX::Real reflection;
+};
+
+struct Light
+{
+  enum Type {
+    InfLight,
+    PointLight
+  };
+
+  Light(int type_, const GFX::ColorF &ambient_ = GFX::Color::black(), const GFX::ColorF &diffuse_ = GFX::Color::black(),
+        const GFX::ColorF &specular_ = GFX::Color::black())
+    : type(type_), ambient(ambient_), diffuse(diffuse_), specular(specular_)
+  {
+  }
+
+  const GFX::vec3& dir() const
+  {
+    return m_vec;
+  }
+
+  GFX::vec3& dir()
+  {
+    return m_vec;
+  }
+
+  const GFX::vec3& pos() const
+  {
+    return m_vec;
+  }
+
+  GFX::vec3& pos()
+  {
+    return m_vec;
+  }
+
+  const int type;
+  GFX::ColorF ambient;
+  GFX::ColorF diffuse;
+  GFX::ColorF specular;
+private:
+  GFX::vec3 m_vec;
+};
+
+
+
+
 /**
  * @brief Find the min. and max. paints for a set of lines.
  *
@@ -98,5 +158,9 @@ std::pair<GFX::Point2D, GFX::Point2D> get_min_max(const GFX::Mesh &mesh, const G
 img::EasyImage draw_zbuffered_mesh(const GFX::Mesh &mesh, const GFX::mat4 &T, const GFX::Color &color, int size, const img::Color &bgColor);
 img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &T,
     const std::vector<GFX::mat4> &modelMatrices, const std::vector<GFX::Color> &colors, int size, const img::Color &bgColor);
+
+img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &project,
+    const std::vector<GFX::mat4> &modelMatrices, const std::vector<Light> &lights, const std::vector<Material> &materials,
+    int size, const img::Color &bgColor);
 
 #endif
