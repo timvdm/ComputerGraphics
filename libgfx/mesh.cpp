@@ -356,6 +356,59 @@ namespace GFX {
 
     return mesh;
   }
+  
+  std::shared_ptr<Mesh> Mesh::buckyball()
+  {
+    std::shared_ptr<Mesh> icosa = icosahedron();
+    std::shared_ptr<Mesh> mesh(new Mesh);
+
+    std::size_t offset = 0;
+
+    // add hexagons
+    for (std::size_t i = 0; i < icosa->faces().size(); ++i) {
+      const Face &face = icosa->faces()[i];
+
+      const vec4 p1 = icosa->vertices()[face[0]];
+      const vec4 p2 = icosa->vertices()[face[1]];
+      const vec4 p3 = icosa->vertices()[face[2]];
+
+      const vec4 dir_p1p2 = (p2 - p1) / 3.0;
+      const vec4 dir_p2p3 = (p3 - p2) / 3.0;
+      const vec4 dir_p3p1 = (p1 - p3) / 3.0;
+
+      const vec4 q1 = p1 +       dir_p1p2;
+      const vec4 q2 = p1 + 2.0 * dir_p1p2;
+      const vec4 q3 = p2 +       dir_p2p3;
+      const vec4 q4 = p2 + 2.0 * dir_p2p3;
+      const vec4 q5 = p3 +       dir_p3p1;
+      const vec4 q6 = p3 + 2.0 * dir_p3p1;
+
+      std::size_t offset = mesh->vertices().size();
+
+      mesh->addVertex(q1.x(), q1.y(), q1.z());
+      mesh->addVertex(q2.x(), q2.y(), q2.z());
+      mesh->addVertex(q3.x(), q3.y(), q3.z());
+      mesh->addVertex(q4.x(), q4.y(), q4.z());
+      mesh->addVertex(q5.x(), q5.y(), q5.z());
+      mesh->addVertex(q6.x(), q6.y(), q6.z());
+
+      Face newFace;
+
+      newFace.push_back(offset    );
+      newFace.push_back(offset + 1);
+      newFace.push_back(offset + 2);
+      newFace.push_back(offset + 3);
+      newFace.push_back(offset + 4);
+      newFace.push_back(offset + 5);
+
+      mesh->addFace(newFace);
+
+      //std::cout << "V: " << mesh->vertices().size() << std::endl;
+      //std::cout << "F: " << mesh->faces().size() * mesh->faces()[0].size() << std::endl;
+    }
+
+    return mesh;
+  }
 
   std::shared_ptr<Mesh> Mesh::cone(int n, Real h)
   {

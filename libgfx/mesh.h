@@ -112,6 +112,11 @@ namespace GFX {
         return m_vertices;
       }
 
+      std::vector<vec4>& vertices()
+      {
+        return m_vertices;
+      }
+
       const std::vector<std::vector<int> >& faces() const
       {
         return m_faces;
@@ -160,11 +165,12 @@ namespace GFX {
 
       static Face make_face(int i, int j, int k = -1, int l = -1, int m = -1);
 
-      static std::shared_ptr<Mesh> cube();
       static std::shared_ptr<Mesh> tetrahedron();
+      static std::shared_ptr<Mesh> cube();
       static std::shared_ptr<Mesh> octahedron();
       static std::shared_ptr<Mesh> icosahedron();
       static std::shared_ptr<Mesh> dodecahedron();
+      static std::shared_ptr<Mesh> buckyball();
       static std::shared_ptr<Mesh> cone(int n, Real h);
       static std::shared_ptr<Mesh> cylinder(int n, Real h);
       static std::shared_ptr<Mesh> sphere(int n);
