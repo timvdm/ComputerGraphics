@@ -5,4 +5,4 @@ import os
 
 for f in sorted(glob.glob('*.ini')):
     print 'Running ' + f + '...'
-    os.system('./engine ' + f)
+    os.system('./src/engine ' + f)
