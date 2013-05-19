@@ -210,7 +210,7 @@ namespace GFX {
 
     mesh->addFace(0, 1, 2);
     mesh->addFace(1, 3, 2);
-    mesh->addFace(0, 1, 3);
+    mesh->addFace(0, 3, 1);
     mesh->addFace(0, 2, 3);
 
     return mesh;
@@ -508,10 +508,10 @@ namespace GFX {
     for (int i = 0; i < n; ++i)
       mesh->addFace(i, (i + 1) % n, n + (i + 1) % n, n + i);
 
-    std::vector<int> bottom, top;
+    std::vector<int> bottom(n), top(n);
     for (int i = 0; i < n; ++i) {
-      bottom.push_back(n - i - 1);
-      top.push_back(2 * n - i - 1);
+      bottom[i] = n - i - 1;
+      top[n - i - 1] = 2 * n - i - 1;
     }
     mesh->addFace(bottom);
     mesh->addFace(top);
