@@ -175,8 +175,6 @@ namespace CG {
 
             lights.push_back(Light(lightType, ambient, diffuse, specular, dir_pos));
 
-            std::cout << lights.back() << std::endl;
-
           } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
             return img::EasyImage();
@@ -211,8 +209,6 @@ namespace CG {
             } catch (...) {}
 
             materials.push_back(Material(ambient, diffuse, specular, reflectionCoeff));
-
-            std::cout << materials.back() << std::endl;
 
             GFX::mat4 model = modelMatrix(figureName, conf);
             modelMatrices.push_back(model);

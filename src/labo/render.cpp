@@ -478,7 +478,7 @@ void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB,
   }
 
   // compute diffuse light
-  bool havePointLight = false;
+  bool doPerPixelLighting = material.reflection != 0.0;
   GFX::ColorF diffuse = GFX::Color::black();
   for (auto light : lights) {
     if (light.type == Light::InfLight) {
@@ -489,14 +489,14 @@ void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB,
         diffuse.b += material.diffuse.b * light.diffuse.b * cos_alpha;
       }
     } else
-      havePointLight = true;
+      doPerPixelLighting = true;
   }
 
   GFX::ColorF triangle_color(ambient.r + diffuse.r,
                              ambient.g + diffuse.g,
                              ambient.b + diffuse.b);
 
-  if (!havePointLight) {
+  if (!doPerPixelLighting) {
 
     for (int y = minY; y <= maxY; ++y) {
       // compute x range in screen coordinates
@@ -536,16 +536,51 @@ void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB,
         for (std::size_t i = 0; i < lights.size(); ++i)
           if (lights[i].type == Light::PointLight) {
             // convert pixel back to eye-coordinates and compute light dir
-            GFX::vec3 dir = GFX::vec3(lightPos[i].x(), lightPos[i].y(), lightPos[i].z()) -
-                            GFX::vec3(-z * (x - ctx.zBuffer.width() / 2.0 + cx) / d, -z * (y - ctx.zBuffer.height() / 2.0 + cy) / d, z);
-            dir.normalize();
-            GFX::Real cos_alpha = n.dot(dir);
+            GFX::vec3 pixel(-z * (x - ctx.zBuffer.width() / 2.0 + cx) / d, -z * (y - ctx.zBuffer.height() / 2.0 + cy) / d, z);
+            GFX::vec3 dir = GFX::vec3(lightPos[i].x(), lightPos[i].y(), lightPos[i].z()) - pixel;
+            GFX::Real cos_alpha = n.dot(dir.normalized());
 
             if (cos_alpha > 0.0) {
               color.r += material.diffuse.r * lights[i].diffuse.r * cos_alpha;
               color.g += material.diffuse.g * lights[i].diffuse.g * cos_alpha;
               color.b += material.diffuse.b * lights[i].diffuse.b * cos_alpha;
             }
+
+            // do specular lighting if needed
+            if (material.reflection != 0.0) {
+              GFX::vec3 r = 2.0 * cos_alpha * n - dir.normalized();
+              GFX::Real cos_beta = r.dot((GFX::vec3(0.0, 0.0, d) - pixel).normalized());
+
+              if (cos_beta > 0.0 ) {
+                cos_beta = std::pow(cos_beta, material.reflection);
+
+                color.r += material.specular.r * lights[i].specular.r * cos_beta;
+                color.g += material.specular.g * lights[i].specular.g * cos_beta;
+                color.b += material.specular.b * lights[i].specular.b * cos_beta;
+              }
+            }
+
+
+          } else {
+            // do specular lighting if needed
+            if (material.reflection != 0.0) {
+              // convert pixel back to eye-coordinates and compute light dir
+              GFX::vec3 pixel(-z * (x - ctx.zBuffer.width() / 2.0 + cx) / d, -z * (y - ctx.zBuffer.height() / 2.0 + cy) / d, z);
+              //GFX::vec3 dir = GFX::vec3(lightPos[i].x(), lightPos[i].y(), lightPos[i].z()) - pixel;
+              GFX::Real cos_alpha = n.dot(-lights[i].dir());
+
+              GFX::vec3 r = 2.0 * cos_alpha * n + lights[i].dir();
+              GFX::Real cos_beta = r.dot((GFX::vec3(0.0, 0.0, d) - pixel).normalized());
+
+              if (cos_beta > 0.0 ) {
+                cos_beta = std::pow(cos_beta, material.reflection);
+
+                color.r += material.specular.r * lights[i].specular.r * cos_beta;
+                color.g += material.specular.g * lights[i].specular.g * cos_beta;
+                color.b += material.specular.b * lights[i].specular.b * cos_beta;
+              }
+            }
+
           }
 
         // draw the pixel
