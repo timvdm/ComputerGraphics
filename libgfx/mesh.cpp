@@ -2,7 +2,7 @@
 #include "utility.h"
 
 namespace GFX {
-      
+
   void Mesh::setFaceColor(int index, const Color &color)
   {
     assert(index < m_faces.size());
@@ -14,7 +14,7 @@ namespace GFX {
     for (std::size_t i = 0; i  < face.size(); ++i)
       m_colors[face[i]] = color;
   }
-  
+
   void Mesh::setVertexColor(int index, const Color &color)
   {
     assert(index < m_vertices.size());
@@ -43,7 +43,7 @@ namespace GFX {
 
       n.normalize();
 
-      m_normals.push_back(n);    
+      m_normals.push_back(n);
     }
 
     if (!smooth)
@@ -102,7 +102,7 @@ namespace GFX {
 
     return attr;
   }
-  
+
   std::vector<Real> Mesh::quadAttributes(bool normals, bool colors, bool texCoords, std::size_t extra)
   {
     std::vector<Real> attr;
@@ -202,7 +202,7 @@ namespace GFX {
   std::shared_ptr<Mesh> Mesh::tetrahedron()
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
-    
+
     mesh->addVertex( 1, -1, -1);
     mesh->addVertex(-1,  1, -1);
     mesh->addVertex( 1,  1,  1);
@@ -215,7 +215,7 @@ namespace GFX {
 
     return mesh;
   }
-  
+
   std::shared_ptr<Mesh> Mesh::octahedron()
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
@@ -356,7 +356,7 @@ namespace GFX {
 
     return mesh;
   }
-  
+
   std::shared_ptr<Mesh> Mesh::buckyball()
   {
     std::shared_ptr<Mesh> icosa = icosahedron();
@@ -407,6 +407,62 @@ namespace GFX {
       //std::cout << "F: " << mesh->faces().size() * mesh->faces()[0].size() << std::endl;
     }
 
+    // add pentagons
+    const int nbrs[12][5] = {
+      {  2,  3,  4,  5,  6 }, // 1
+      {  1,  6, 11,  7,  3 }, // 2
+      {  1,  2,  7,  8,  4 }, // 3
+      {  1,  3,  8,  9,  5 }, // 4
+      {  1,  4,  9, 10,  6 }, // 5
+      {  1,  5, 10, 11,  2 }, // 6
+      {  2, 11, 12,  8,  3 }, // 7
+      {  3,  7, 12,  9,  4 }, // 8
+      {  4,  8, 12, 10,  5 }, // 9
+      {  5,  9, 12, 11,  6 }, // 10
+      {  6, 10, 12,  7,  2 }, // 11
+      {  7, 11, 10,  9,  8 }  // 12
+    };
+
+    for (int i = 0; i < 12; ++i) {
+      const vec4 &p = icosa->vertices()[i];
+
+      const vec4 &nbr1 = icosa->vertices()[nbrs[i][0] - 1];
+      const vec4 &nbr2 = icosa->vertices()[nbrs[i][1] - 1];
+      const vec4 &nbr3 = icosa->vertices()[nbrs[i][2] - 1];
+      const vec4 &nbr4 = icosa->vertices()[nbrs[i][3] - 1];
+      const vec4 &nbr5 = icosa->vertices()[nbrs[i][4] - 1];
+
+      const vec4 dir1 = (nbr1 - p) / 3.0;
+      const vec4 dir2 = (nbr2 - p) / 3.0;
+      const vec4 dir3 = (nbr3 - p) / 3.0;
+      const vec4 dir4 = (nbr4 - p) / 3.0;
+      const vec4 dir5 = (nbr5 - p) / 3.0;
+
+      const vec4 p1 = p + dir1;
+      const vec4 p2 = p + dir2;
+      const vec4 p3 = p + dir3;
+      const vec4 p4 = p + dir4;
+      const vec4 p5 = p + dir5;
+
+      std::size_t offset = mesh->vertices().size();
+
+      mesh->addVertex(p1.x(), p1.y(), p1.z());
+      mesh->addVertex(p2.x(), p2.y(), p2.z());
+      mesh->addVertex(p3.x(), p3.y(), p3.z());
+      mesh->addVertex(p4.x(), p4.y(), p4.z());
+      mesh->addVertex(p5.x(), p5.y(), p5.z());
+
+      Face newFace;
+
+      newFace.push_back(offset    );
+      newFace.push_back(offset + 1);
+      newFace.push_back(offset + 2);
+      newFace.push_back(offset + 3);
+      newFace.push_back(offset + 4);
+
+      mesh->addFace(newFace);
+    }
+
     return mesh;
   }
 
@@ -435,7 +491,7 @@ namespace GFX {
   std::shared_ptr<Mesh> Mesh::cylinder(int n, Real h)
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
-    
+
     Real pi_2_n = 2.0 * M_PI / n;
 
     for (int i = 0; i < n; ++i) {
