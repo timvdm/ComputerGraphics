@@ -448,6 +448,9 @@ void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB,
   GFX::vec3 v = GFX::vec3(C.data()) - GFX::vec3(A.data());
   GFX::vec3 w = u.cross(v);
 
+  // normal
+  const GFX::vec3 n = w.normalized();
+
   GFX::Real k = w.dot(GFX::vec3(A.data()));
   GFX::Real dzdx = -w.x() / (d * k);
   GFX::Real dzdy = -w.y() / (d * k);
@@ -474,23 +477,82 @@ void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB,
     ambient.b += material.ambient.b * light.ambient.b;
   }
 
-  for (int y = minY; y <= maxY; ++y) {
-    // compute x range in screen coordinates
-    std::pair<int, int> xRange = impl::compute_x_range(y, A, B, C);
-    int xL = xRange.first;
-    int xR = xRange.second;
+  // compute diffuse light
+  bool havePointLight = false;
+  GFX::ColorF diffuse = GFX::Color::black();
+  for (auto light : lights) {
+    if (light.type == Light::InfLight) {
+      GFX::Real cos_alpha = n.dot(-light.dir());
+      if (cos_alpha > 0.0) {
+        diffuse.r += material.diffuse.r * light.diffuse.r * cos_alpha;
+        diffuse.g += material.diffuse.g * light.diffuse.g * cos_alpha;
+        diffuse.b += material.diffuse.b * light.diffuse.b * cos_alpha;
+      }
+    } else
+      havePointLight = true;
+  }
 
-    for (int x = xL; x <= xR; ++x) {
+  GFX::ColorF triangle_color(ambient.r + diffuse.r,
+                             ambient.g + diffuse.g,
+                             ambient.b + diffuse.b);
 
-      // interpolate 1/z
-      GFX::Real z = 1.0001 * zG + (x - xG) * dzdx + (y - yG) * dzdy;
+  if (!havePointLight) {
 
+    for (int y = minY; y <= maxY; ++y) {
+      // compute x range in screen coordinates
+      std::pair<int, int> xRange = impl::compute_x_range(y, A, B, C);
+      int xL = xRange.first;
+      int xR = xRange.second;
 
-
-
-      // draw the pixel
-      ctx.drawPixel(x, y, z, ambient);
+      for (int x = xL; x <= xR; ++x) {
+        // interpolate 1/z
+        GFX::Real z = 1.0001 * zG + (x - xG) * dzdx + (y - yG) * dzdy;
+        // draw the pixel
+        ctx.drawPixel(x, y, z, triangle_color);
+      }
     }
+
+  } else {
+
+    std::vector<GFX::vec4> lightPos(lights.size(), GFX::vec4::Zero());
+    for (std::size_t i = 0; i < lights.size(); ++i)
+      if (lights[i].type == Light::PointLight) {
+        lightPos[i] = lights[i].vec();
+        //screen_coordinate(ctx, lightPos[i], d, cx, cy);
+      }
+
+    for (int y = minY; y <= maxY; ++y) {
+      // compute x range in screen coordinates
+      std::pair<int, int> xRange = impl::compute_x_range(y, A, B, C);
+      int xL = xRange.first;
+      int xR = xRange.second;
+
+      for (int x = xL; x <= xR; ++x) {
+        // interpolate 1/z
+        GFX::Real one_over_z = 1.0001 * zG + (x - xG) * dzdx + (y - yG) * dzdy;
+        GFX::Real z = 1.0 / one_over_z;
+
+        GFX::ColorF color = triangle_color;
+        for (std::size_t i = 0; i < lights.size(); ++i)
+          if (lights[i].type == Light::PointLight) {
+            // convert pixel back to eye-coordinates and compute light dir
+            GFX::vec3 dir = GFX::vec3(lightPos[i].x(), lightPos[i].y(), lightPos[i].z()) -
+                            GFX::vec3(-z * (x - ctx.zBuffer.width() / 2.0 + cx) / d, -z * (y - ctx.zBuffer.height() / 2.0 + cy) / d, z);
+            dir.normalize();
+            GFX::Real cos_alpha = n.dot(dir);
+
+            if (cos_alpha > 0.0) {
+              color.r += material.diffuse.r * lights[i].diffuse.r * cos_alpha;
+              color.g += material.diffuse.g * lights[i].diffuse.g * cos_alpha;
+              color.b += material.diffuse.b * lights[i].diffuse.b * cos_alpha;
+            }
+          }
+
+        // draw the pixel
+        ctx.drawPixel(x, y, one_over_z, color);
+      }
+    }
+
   }
 
 }

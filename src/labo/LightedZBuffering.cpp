@@ -14,10 +14,10 @@ namespace CG {
   class LightedZBuffering : public Plugin
   {
     public:
-      GFX::Color extractColor(const ini::Entry &entry) const
+      //GFX::Color extractColor(const ini::Entry &entry) const
+      GFX::Color extractColor(const std::vector<double> &rgb) const
       {
         try {
-          std::vector<double> rgb = entry;
           return GFX::Color(255 * rgb.at(0), 255 * rgb.at(1), 255 * rgb.at(2));
         } catch (const std::exception &e) {
           std::cerr << "Could not parse color (using default black)" << std::endl;
@@ -136,11 +136,47 @@ namespace CG {
 
         std::vector<Light> lights;
         for (int i = 0; i < nrLights; ++i) {
-          std::string figureName = make_string("Light", i);
+          std::string lightName = make_string("Light", i);
 
           try {
-            GFX::ColorF ambient = extractColor(conf[figureName]["ambientLight"]);
-            lights.push_back(Light(Light::InfLight, ambient));
+            // ambient
+            GFX::ColorF ambient = extractColor(conf[lightName]["ambientLight"]);
+
+            // diffuse
+            GFX::ColorF diffuse = GFX::Color::black();
+            int lightType = Light::InfLight;
+            GFX::vec4 dir_pos = GFX::vec4::Zero();
+            try {
+              diffuse = extractColor(conf[lightName]["diffuseLight"]);
+              bool isInfLight = conf[lightName]["infinity"];
+              lightType = isInfLight ? Light::InfLight : Light::PointLight;
+
+              std::vector<double> vec;
+              if (isInfLight)
+                vec = conf[lightName]["direction"];
+              else
+                vec = conf[lightName]["location"];
+
+              GFX::vec3 tmp(vec[0], vec[1], vec[2]);
+              if (isInfLight) {
+                tmp.normalize();
+                dir_pos = project * GFX::vec4(tmp.x(), tmp.y(), tmp.z(), 0.0);
+              } else
+                dir_pos = project * GFX::vec4(tmp.x(), tmp.y(), tmp.z(), 1.0);
+
+            } catch (...) {}
+
+
+            // specular
+            GFX::ColorF specular = GFX::Color::black();
+            try {
+              specular = extractColor(conf[lightName]["specularLight"]);
+            } catch (...) {}
+
+            lights.push_back(Light(lightType, ambient, diffuse, specular, dir_pos));
+
+            std::cout << lights.back() << std::endl;
+
           } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
             return img::EasyImage();
@@ -156,8 +192,27 @@ namespace CG {
 
           try {
             std::string type = conf[figureName]["type"].as_string_or_die();
+
+            // ambient
             GFX::ColorF ambient = extractColor(conf[figureName]["ambientReflection"]);
-            materials.push_back(Material(ambient));
+            // diffuse
+            GFX::ColorF diffuse = GFX::Color::black();
+            try {
+              diffuse = extractColor(conf[figureName]["diffuseReflection"]);
+            } catch (...) {}
+            // specular
+            GFX::ColorF specular = GFX::Color::black();
+            try {
+              specular = extractColor(conf[figureName]["specularReflection"]);
+            } catch (...) {}
+            GFX::Real reflectionCoeff = 0.0;
+            try {
+              reflectionCoeff = conf[figureName]["reflectionCoefficient"];
+            } catch (...) {}
+
+            materials.push_back(Material(ambient, diffuse, specular, reflectionCoeff));
+
+            std::cout << materials.back() << std::endl;
 
             GFX::mat4 model = modelMatrix(figureName, conf);
             modelMatrices.push_back(model);

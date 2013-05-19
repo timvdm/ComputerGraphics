@@ -24,6 +24,16 @@ struct Material
   GFX::Real reflection;
 };
 
+inline std::ostream& operator<<(std::ostream &os, const Material &material)
+{
+  os << "Material:" << std::endl;
+  os << "    ambient: (" << material.ambient.r << ", " << material.ambient.g << ", " << material.ambient.b << ")" << std::endl;
+  os << "    diffuse: (" << material.diffuse.r << ", " << material.diffuse.g << ", " << material.diffuse.b << ")" << std::endl;
+  os << "    specular: (" << material.specular.r << ", " << material.specular.g << ", " << material.specular.b << ")" << std::endl;
+  os << "    reflection: " << material.reflection;
+  return os;
+}
+
 struct Light
 {
   enum Type {
@@ -32,27 +42,27 @@ struct Light
   };
 
   Light(int type_, const GFX::ColorF &ambient_ = GFX::Color::black(), const GFX::ColorF &diffuse_ = GFX::Color::black(),
-        const GFX::ColorF &specular_ = GFX::Color::black())
-    : type(type_), ambient(ambient_), diffuse(diffuse_), specular(specular_)
+        const GFX::ColorF &specular_ = GFX::Color::black(), const GFX::vec4 &vec = GFX::vec4::Zero())
+    : type(type_), ambient(ambient_), diffuse(diffuse_), specular(specular_), m_vec(vec)
   {
   }
 
-  const GFX::vec3& dir() const
+  GFX::vec3 dir() const
+  {
+    return GFX::vec3(m_vec.data());
+  }
+
+  GFX::vec3 pos() const
+  {
+    return GFX::vec3(m_vec.data());
+  }
+
+  GFX::vec4& vec()
   {
     return m_vec;
   }
 
-  GFX::vec3& dir()
-  {
-    return m_vec;
-  }
-
-  const GFX::vec3& pos() const
-  {
-    return m_vec;
-  }
-
-  GFX::vec3& pos()
+  const GFX::vec4& vec() const
   {
     return m_vec;
   }
@@ -62,9 +72,25 @@ struct Light
   GFX::ColorF diffuse;
   GFX::ColorF specular;
 private:
-  GFX::vec3 m_vec;
+  GFX::vec4 m_vec;
 };
 
+inline std::ostream& operator<<(std::ostream &os, const Light &light)
+{
+  if (light.type == Light::InfLight)
+    os << "InfLight:" << std::endl;
+  else
+    os << "PointLight:" << std::endl;
+  os << "    ambient: (" << light.ambient.r << ", " << light.ambient.g << ", " << light.ambient.b << ")" << std::endl;
+  os << "    diffuse: (" << light.diffuse.r << ", " << light.diffuse.g << ", " << light.diffuse.b << ")" << std::endl;
+  os << "    specular: (" << light.specular.r << ", " << light.specular.g << ", " << light.specular.b << ")" << std::endl;
+  if (light.type == Light::InfLight)
+    os << "    direction: ";
+  else
+    os << "    location: ";
+  os << "(" << light.dir().x() << ", " << light.dir().y() << ", " << light.dir().z() << ")";
+  return os;
+}
 
 
 
