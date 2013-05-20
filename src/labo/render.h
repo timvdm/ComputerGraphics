@@ -202,6 +202,8 @@ struct ShadowMask
 };
 
 
+extern GFX::Real shadowEpsilon;
+
 img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &project,
     const std::vector<GFX::mat4> &modelMatrices, const std::vector<Light> &lights, const std::vector<Material> &materials,
     const std::vector<ShadowMask> &shadowMasks, int size, const img::Color &bgColor);

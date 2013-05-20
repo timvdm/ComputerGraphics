@@ -294,8 +294,8 @@ namespace CG {
               std::vector<GFX::Mesh::Face> faces = unit->faces();
 
               std::shared_ptr<GFX::Mesh> mesh = createFractal(points0, faces, nrIterations, fractalScale);
-              mesh->triangulate();
 
+              mesh->triangulate();
               meshes.push_back(mesh);
 
             } else if (type == "MengerSponge") {
@@ -385,6 +385,41 @@ namespace CG {
               while (materials.size() < meshes.size())
                 materials.push_back(materials.back());
 
+            } else if (type.substr(0, 5) == "Thick") {
+
+              shadowEpsilon = 10e-5;
+
+              //
+              // Thick figures
+              //
+
+              GFX::Real radius = conf[figureName]["radius"];
+              int n = conf[figureName]["n"]; // cylinder quality
+              int m = conf[figureName]["m"]; // sphere quality
+
+              std::shared_ptr<GFX::Mesh> figure;
+
+              if (type == "ThickTetrahedron")
+                figure = GFX::Mesh::tetrahedron();
+              else if (type == "ThickCube")
+                figure = GFX::Mesh::cube();
+              else if (type == "ThickDodecahedron")
+                figure = GFX::Mesh::dodecahedron();
+              else if (type == "ThickIcosahedron")
+                figure = GFX::Mesh::icosahedron();
+              else if (type == "ThickOctahedron")
+                figure = GFX::Mesh::octahedron();
+              else if (type == "ThickBuckyBall")
+                figure = GFX::Mesh::buckyball();
+              else if (type == "Thick3DLSystem") {
+                std::string inputfile = conf[figureName]["inputfile"].as_string_or_die();
+                figure = LSystem3D::generateMesh(inputfile);
+              }
+
+              std::shared_ptr<GFX::Mesh> mesh = GFX::Mesh::thickFigure(figure.get(), radius, n, m);
+
+              mesh->triangulate();
+              meshes.push_back(mesh);
             }
 
           } catch (const std::exception &e) {

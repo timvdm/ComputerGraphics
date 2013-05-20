@@ -10,6 +10,9 @@
 
 using namespace GFX;
 
+GFX::Real shadowEpsilon = 10e-3;
+
+
 template<typename LinesXD>
 std::pair<Point2D, Point2D> get_min_max(const LinesXD &lines)
 {
@@ -701,7 +704,7 @@ void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB,
           GFX::Real zShadow = (1.0 - alpha_y) / zE + alpha_y / zF;
 
           GFX::Real delta = std::abs(zShadow - 1.0 / P.z());
-          if (delta > 10e-3)
+          if (delta > shadowEpsilon)
             continue;
 
           // compute light dir
