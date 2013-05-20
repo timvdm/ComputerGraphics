@@ -9,8 +9,8 @@ all: engine
 #
 ########################################
 
-engine: engine.o EasyImage.o ini_configuration.o lparser.o render.o LineDrawing.o LSystem2D.o LSystem3D.o Wireframe.o transform.o mesh.o
-	$(CXX) engine.o EasyImage.o ini_configuration.o lparser.o render.o LineDrawing.o LSystem2D.o LSystem3D.o Wireframe.o transform.o mesh.o -o engine
+engine: engine.o EasyImage.o ini_configuration.o lparser.o render.o LineDrawing.o LSystem2D.o LSystem3D.o Wireframe.o ZBufferedWireframe.o ZBuffering.o LightedZBuffering.o  transform.o mesh.o texture.o 
+	$(CXX) engine.o EasyImage.o ini_configuration.o lparser.o render.o LineDrawing.o LSystem2D.o LSystem3D.o Wireframe.o ZBufferedWireframe.o ZBuffering.o LightedZBuffering.o transform.o mesh.o texture.o -o engine
 
 engine.o: src/engine.cc
 	$(CXX) $(FLAGS) src/engine.cc
@@ -52,6 +52,15 @@ LSystem3D.o: src/labo/LSystem3D.cpp
 Wireframe.o: src/labo/Wireframe.cpp
 	$(CXX) $(FLAGS) src/labo/Wireframe.cpp
 
+ZBufferedWireframe.o: src/labo/ZBufferedWireframe.cpp
+	$(CXX) $(FLAGS) src/labo/ZBufferedWireframe.cpp
+
+ZBuffering.o: src/labo/ZBuffering.cpp
+	$(CXX) $(FLAGS) src/labo/ZBuffering.cpp
+
+LightedZBuffering.o: src/labo/LightedZBuffering.cpp
+	$(CXX) $(FLAGS) src/labo/LightedZBuffering.cpp
+
 ########################################
 #
 # libgfx library
@@ -63,6 +72,9 @@ transform.o: src/libgfx/transform.h src/libgfx/transform.cpp
 
 mesh.o: src/libgfx/mesh.h src/libgfx/mesh.cpp
 	$(CXX) $(FLAGS) src/libgfx/mesh.cpp
+
+transform.o: src/libgfx/transform.h src/libgfx/transform.cpp
+	$(CXX) $(FLAGS) src/libgfx/transform.cpp
 
 ########################################
 #
