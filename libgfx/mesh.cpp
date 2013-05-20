@@ -1,5 +1,6 @@
 #include "mesh.h"
 #include "utility.h"
+#include "transform.h"
 
 namespace GFX {
 
@@ -488,7 +489,7 @@ namespace GFX {
     return mesh;
   }
 
-  std::shared_ptr<Mesh> Mesh::cylinder(int n, Real h)
+  std::shared_ptr<Mesh> Mesh::cylinder(int n, Real h, bool TandB)
   {
     std::shared_ptr<Mesh> mesh(new Mesh);
 
@@ -508,13 +509,15 @@ namespace GFX {
     for (int i = 0; i < n; ++i)
       mesh->addFace(i, (i + 1) % n, n + (i + 1) % n, n + i);
 
-    std::vector<int> bottom(n), top(n);
-    for (int i = 0; i < n; ++i) {
-      bottom[i] = n - i - 1;
-      top[n - i - 1] = 2 * n - i - 1;
+    if (TandB) {
+      std::vector<int> bottom(n), top(n);
+      for (int i = 0; i < n; ++i) {
+        bottom[i] = n - i - 1;
+        top[n - i - 1] = 2 * n - i - 1;
+      }
+      mesh->addFace(bottom);
+      mesh->addFace(top);
     }
-    mesh->addFace(bottom);
-    mesh->addFace(top);
 
     return mesh;
   }
@@ -630,6 +633,100 @@ namespace GFX {
         int p3 = columnMajorIndex(i          , (j + 1) % m, m);
         mesh->addFace(p0, p1, p2, p3);
       }
+
+    return mesh;
+  }
+
+  std::shared_ptr<Mesh> Mesh::thickFigure(Mesh *figure, Real radius, int n, int m)
+  {
+    // generate unit sphere
+    std::shared_ptr<Mesh> sphere = Mesh::sphere(m);
+    // scale using radius
+    for (std::size_t i = 0; i < sphere->vertices().size(); ++i)
+      sphere->vertices()[i] *= radius;
+
+    std::shared_ptr<Mesh> mesh(new Mesh);
+
+    // replace points in figure with spheres
+    for (std::size_t i = 0; i < figure->vertices().size(); ++i) {
+      std::size_t offset = mesh->vertices().size();
+
+      Real dx = figure->vertices()[i].x();
+      Real dy = figure->vertices()[i].y();
+      Real dz = figure->vertices()[i].z();
+
+      // copy sphere vertices
+      for (auto v : sphere->vertices())
+        mesh->addVertex(v.x() + dx, v.y() + dy, v.z() + dz);
+
+      // copy sphere faces
+      for (auto face : sphere->faces()) {
+        Mesh::Face newFace;
+        for (auto v : face)
+          newFace.push_back(offset + v);
+        mesh->addFace(newFace);
+      }
+    }
+
+    // replace face edges with cylinders
+    for (std::size_t i = 0; i < figure->faces().size(); ++i) {
+      std::vector<std::pair<int, int> > edges;
+      for (std::size_t j = 1; j < figure->faces()[i].size(); ++j) {
+        int v1 = figure->faces()[i][j - 1];
+        int v2 = figure->faces()[i][j];
+        edges.push_back(std::make_pair(std::min(v1, v2), std::max(v1, v2)));
+        //edges.push_back(std::make_pair(v1, v2));
+      }
+      int v1 = figure->faces()[i][figure->faces()[i].size() - 1];
+      int v2 = figure->faces()[i][0];
+      edges.push_back(std::make_pair(std::min(v1, v2), std::max(v1, v2)));
+      //edges.push_back(std::make_pair(v1, v2));
+
+      edges.resize(std::unique(edges.begin(), edges.end()) - edges.begin());
+
+      for (auto edge : edges) {
+        //std::cout << "edge: " << edge.first << "-" << edge.second << std::endl;
+        const vec4 &tmp1 = figure->vertices()[edge.first];
+        const vec4 &tmp2 = figure->vertices()[edge.second];
+        const vec3 p1(tmp1.x(), tmp1.y(), tmp1.z());
+        const vec3 p2(tmp2.x(), tmp2.y(), tmp2.z());
+
+        vec3 axis = vec3(0, 0, 1).cross((p2 - p1).normalized());
+        Real angle = std::acos(vec3(0, 0, 1).dot((p2 - p1).normalized()));
+
+        if (std::abs(angle - M_PI) < 10e-4)
+          axis = vec3(1, 0, 0);
+        else if (std::abs(angle) < 10e-4)
+          axis = vec3(1, 0, 0);
+
+        //std::cout << "axis: " << axis.x() << ", " << axis.y() << ", " << axis.z() << std::endl;
+        //std::cout << "angle: " << angle << std::endl;
+
+        mat4 rotation = rotationMatrix(angle, axis.x(), axis.y(), axis.z());
+        mat4 scale = scaleMatrix(radius, radius, 1.0);
+        mat4 transform = rotation * scale;
+
+        Real h = (p1 - p2).norm();
+        std::shared_ptr<Mesh> cylinder = Mesh::cylinder(n, h, false);
+        for (std::size_t i = 0; i < cylinder->vertices().size(); ++i)
+          cylinder->vertices()[i] = transform * cylinder->vertices()[i];
+
+        std::size_t offset = mesh->vertices().size();
+
+        // copy cylinder vertices
+        for (auto v : cylinder->vertices())
+          mesh->addVertex(v.x() + p1.x(), v.y() + p1.y(), v.z() + p1.z());
+
+        // copy cylinder faces
+        for (auto face : cylinder->faces()) {
+          Mesh::Face newFace;
+          for (auto v : face)
+            newFace.push_back(offset + v);
+          mesh->addFace(newFace);
+        }
+
+      }
+    }
 
     return mesh;
   }

@@ -172,9 +172,11 @@ namespace GFX {
       static std::shared_ptr<Mesh> dodecahedron();
       static std::shared_ptr<Mesh> buckyball();
       static std::shared_ptr<Mesh> cone(int n, Real h);
-      static std::shared_ptr<Mesh> cylinder(int n, Real h);
+      static std::shared_ptr<Mesh> cylinder(int n, Real h, bool TandB = true);
       static std::shared_ptr<Mesh> sphere(int n);
       static std::shared_ptr<Mesh> torus(int n, int m, Real R, Real r);
+
+      static std::shared_ptr<Mesh> thickFigure(Mesh *figure, Real radius, int n, int m);
 
     private:
       void addVertexAttributes(std::vector<Real> &attr, int f, int v, bool normals, bool colors, bool texCoords);
