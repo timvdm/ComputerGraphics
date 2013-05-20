@@ -5,8 +5,6 @@ include_directories(..)
 
 set(programs
   texture
-  light
-  shadow
   fire
 )
 
