@@ -5,9 +5,9 @@ project(ComputerGraphics)
 include_directories(thirdparty/eigen3)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "-Wno-enum-compare -std=c++11 ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-Wall -Wno-reorder -Wno-sign-compare -Wno-enum-compare -std=c++11 ${CMAKE_CXX_FLAGS}")
 endif()
 
 add_subdirectory(src)

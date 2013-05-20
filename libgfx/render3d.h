@@ -188,7 +188,7 @@ namespace GFX {
       if (intersects(y, B, C))
         intersections |= 4;
 
-      Real xa, xb;
+      Real xa = 0.0, xb = 0.0;
       switch (intersections) {
         case 1:
         case 2:

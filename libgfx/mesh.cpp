@@ -363,8 +363,6 @@ namespace GFX {
     std::shared_ptr<Mesh> icosa = icosahedron();
     std::shared_ptr<Mesh> mesh(new Mesh);
 
-    std::size_t offset = 0;
-
     // add hexagons
     for (std::size_t i = 0; i < icosa->faces().size(); ++i) {
       const Face &face = icosa->faces()[i];

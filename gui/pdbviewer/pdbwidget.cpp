@@ -330,7 +330,7 @@ struct FragmentShader
     // diffuse factor
     Real df = std::max(0.0, N.dot(L));
     // specular factor
-    Real sf = std::pow(std::max(0.0, N.dot(H)), 50.0);
+    //Real sf = std::pow(std::max(0.0, N.dot(H)), 50.0);
 
     // compute depth value
     pos.z() += N.z() * radius;
@@ -400,7 +400,7 @@ struct FragmentShader
     // compute color
     vec4 ambient = 0.1 * u_material.ambient;
     vec4 diffuse = 0.9 * u_material.diffuse;
-    vec4 specular = 0.4 * u_material.specular;
+    //vec4 specular = 0.4 * u_material.specular;
     vec4 color = ambient + accessibility * df * diffuse;// + accessibility * sf * specular;
     //vec4 color = ambient + df * diffuse;// + accessibility * sf * specular;
 
@@ -643,7 +643,7 @@ Buffer<Real> PDBWidget::createDepthMap(const vec3 &dir)
   mat4 view = lookAtMatrix(0, 0, 1, 0, 0, 0, 0, 1, 0);
   Real aspect = static_cast<Real>(context().width()) / context().height();
   mat4 project = frustumMatrix(-aspect, aspect, -1, 1, 1.0, 10);
-  mat4 trans = translationMatrix(0, 0, 0);
+  //mat4 trans = translationMatrix(0, 0, 0);
 
   // set vertex shader's matrices to view from light position
   Real theta = std::acos(dir.dot(vec3(0, 0, 1)));
@@ -685,7 +685,7 @@ void PDBWidget::createAmbientOcclusionMap(const vec3 &dir)
   mat4 view = lookAtMatrix(0, 0, 1, 0, 0, 0, 0, 1, 0);
   Real aspect = static_cast<Real>(context().width()) / context().height();
   mat4 project = frustumMatrix(-aspect, aspect, -1, 1, 1.0, 10);
-  mat4 trans = translationMatrix(0, 0, 0);
+  //mat4 trans = translationMatrix(0, 0, 0);
 
 
   // set vertex shader's matrices to view from light position

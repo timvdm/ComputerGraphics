@@ -159,7 +159,7 @@ struct FireFragmentShader
     // get varyings
     Real s = std::get<0>(varying);
     Real t = std::get<1>(varying);
-    Real r = std::get<2>(varying);
+    //Real r = std::get<2>(varying);
 
     // check to make sure we are inside the sphere
     Real d2 = s * s + t * t;
