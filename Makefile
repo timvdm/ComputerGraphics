@@ -1,5 +1,5 @@
 CXX = g++
-FLAGS = -c -pedantic -Wall -Wno-reorder -Wno-sign-compare -Wno-enum-compare -std=c++11 -Ithirdparty/eigen3
+FLAGS = -c -pedantic -Wall -Wno-reorder -Wno-sign-compare -Wno-enum-compare -std=c++11 -Ithirdparty/eigen3 -I.
 
 all: engine
 
@@ -67,14 +67,14 @@ LightedZBuffering.o: src/labo/LightedZBuffering.cpp
 #
 ########################################
 
-transform.o: src/libgfx/transform.h src/libgfx/transform.cpp
-	$(CXX) $(FLAGS) src/libgfx/transform.cpp
+transform.o: libgfx/transform.h libgfx/transform.cpp
+	$(CXX) $(FLAGS) libgfx/transform.cpp
 
-mesh.o: src/libgfx/mesh.h src/libgfx/mesh.cpp
-	$(CXX) $(FLAGS) src/libgfx/mesh.cpp
+mesh.o: libgfx/mesh.h libgfx/mesh.cpp
+	$(CXX) $(FLAGS) libgfx/mesh.cpp
 
-transform.o: src/libgfx/transform.h src/libgfx/transform.cpp
-	$(CXX) $(FLAGS) src/libgfx/transform.cpp
+texture.o: libgfx/texture.h libgfx/texture.cpp
+	$(CXX) $(FLAGS) libgfx/texture.cpp
 
 ########################################
 #
