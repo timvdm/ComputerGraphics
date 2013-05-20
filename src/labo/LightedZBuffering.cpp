@@ -112,29 +112,10 @@ namespace CG {
         return mesh;
       }
 
-      img::EasyImage image(const ini::Configuration &conf)
+      std::vector<Light> createLights(const ini::Configuration &conf, int nrLights, const GFX::mat4 &project)
       {
-        int size;
-        std::vector<double> eye;
-        GFX::Color bgColor;
-        int nrFigures;
-        int nrLights;
-
-        // read General section from *.ini file
-        try {
-          size = conf["General"]["size"];
-          eye = conf["General"]["eye"];
-          bgColor = extractColor(conf["General"]["backgroundcolor"]);
-          nrFigures = conf["General"]["nrFigures"];
-          nrLights = conf["General"]["nrLights"];
-        } catch (const std::exception &e) {
-          std::cerr << e.what() << std::endl;
-          return img::EasyImage();
-        }
-
-        GFX::mat4 project = GFX::projectionMatrix(eye[0], eye[1], eye[2]);
-
         std::vector<Light> lights;
+
         for (int i = 0; i < nrLights; ++i) {
           std::string lightName = make_string("Light", i);
 
@@ -177,14 +158,16 @@ namespace CG {
 
           } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
-            return img::EasyImage();
+            return lights;
           }
         }
 
-        std::vector<std::shared_ptr<GFX::Mesh> > meshes;
-        std::vector<GFX::mat4> modelMatrices;
-        std::vector<Material> materials;
+        return lights;
+      }
 
+      bool createMeshes(const ini::Configuration &conf, int nrFigures, std::vector<std::shared_ptr<GFX::Mesh> > &meshes,
+          std::vector<GFX::mat4> &modelMatrices, std::vector<Material> &materials)
+      {
         for (int i = 0; i < nrFigures; ++i) {
           std::string figureName = make_string("Figure", i);
 
@@ -406,11 +389,65 @@ namespace CG {
 
           } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
-            return img::EasyImage();
+            return false;
           }
         }
 
-        return draw_zbuffered_meshes(meshes, project, modelMatrices, lights, materials, size, img::Color(255 * bgColor.r, 255 * bgColor.g, 255 * bgColor.b));
+        return true;
+      }
+
+      img::EasyImage image(const ini::Configuration &conf)
+      {
+        int size;
+        std::vector<double> eye;
+        GFX::Color bgColor;
+        int nrFigures;
+        int nrLights;
+
+        // read General section from *.ini file
+        try {
+          size = conf["General"]["size"];
+          eye = conf["General"]["eye"];
+          bgColor = extractColor(conf["General"]["backgroundcolor"]);
+          nrFigures = conf["General"]["nrFigures"];
+          nrLights = conf["General"]["nrLights"];
+        } catch (const std::exception &e) {
+          std::cerr << e.what() << std::endl;
+          return img::EasyImage();
+        }
+
+        bool shadowEnabled = false;
+        int shadowMaskSize = 0;
+        try {
+          shadowEnabled = conf["General"]["shadowEnabled"];
+          shadowMaskSize = conf["General"]["shadowMask"];
+        } catch (...) {}
+
+        GFX::mat4 project = GFX::projectionMatrix(eye[0], eye[1], eye[2]);
+
+        std::vector<Light> lights = createLights(conf, nrLights, project);
+        if (lights.empty())
+          return img::EasyImage();
+
+        std::vector<std::shared_ptr<GFX::Mesh> > meshes;
+        std::vector<GFX::mat4> modelMatrices;
+        std::vector<Material> materials;
+
+        if (!createMeshes(conf, nrFigures, meshes, modelMatrices, materials))
+          return img::EasyImage();
+
+        std::vector<ShadowMask> shadowMasks;
+
+        if (shadowEnabled) {
+          // create shadow masks
+          std::vector<Light> shadowLights = createLights(conf, nrLights, GFX::mat4::Identity());
+          for (auto light : shadowLights) {
+            GFX::mat4 proj = GFX::projectionMatrix(light.pos().x(), light.pos().y(), light.pos().z());
+            shadowMasks.push_back(draw_shadow_mask(meshes, proj, modelMatrices, shadowMaskSize));
+          }
+        }
+
+        return draw_zbuffered_meshes(meshes, project, modelMatrices, lights, materials, shadowMasks, size, img::Color(255 * bgColor.r, 255 * bgColor.g, 255 * bgColor.b));
       }
 
   };

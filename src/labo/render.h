@@ -5,6 +5,7 @@
 
 #include <libgfx/line2d.h>
 #include <libgfx/line3d.h>
+#include <libgfx/buffer.h>
 
 #include <memory>
 
@@ -185,8 +186,29 @@ img::EasyImage draw_zbuffered_mesh(const GFX::Mesh &mesh, const GFX::mat4 &T, co
 img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &T,
     const std::vector<GFX::mat4> &modelMatrices, const std::vector<GFX::Color> &colors, int size, const img::Color &bgColor);
 
+
+struct ShadowMask
+{
+  ShadowMask(const GFX::Buffer<GFX::Real> &mask_, const GFX::mat4 &view_, GFX::Real d_, GFX::Real dx_, GFX::Real dy_)
+    : mask(mask_), view(view_), d(d_), dx(dx_), dy(dy_)
+  {
+  }
+
+  const GFX::Buffer<GFX::Real> mask; // the shadow mask (z-buffer)
+  GFX::mat4 view; // view matrix for light position
+  GFX::Real d; // distance from origin to camera (light position)
+  GFX::Real dx; // x displacement to screen coords
+  GFX::Real dy; // y displacement to screen coords
+};
+
+
 img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &project,
     const std::vector<GFX::mat4> &modelMatrices, const std::vector<Light> &lights, const std::vector<Material> &materials,
-    int size, const img::Color &bgColor);
+    const std::vector<ShadowMask> &shadowMasks, int size, const img::Color &bgColor);
+
+
+ShadowMask draw_shadow_mask(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &project,
+    const std::vector<GFX::mat4> &modelMatrices, int size);
+
 
 #endif

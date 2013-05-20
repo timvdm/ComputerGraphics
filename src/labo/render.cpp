@@ -319,6 +319,12 @@ void screen_coordinate(const Ctx &ctx, GFX::vec4 &v, Real d, Real cx, Real cy)
   v.y() = d * v.y() / -v.z() + ctx.zBuffer.height() / 2.0 - cy;
 }
 
+void screen_coordinate(int width, int height, GFX::vec4 &v, Real d, Real cx, Real cy)
+{
+  v.x() = d * v.x() / -v.z() + width / 2.0 - cx;
+  v.y() = d * v.y() / -v.z() + height / 2.0 - cy;
+}
+
 void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB, const GFX::vec4 &vC,
     const GFX::mat4 &T, Real d, Real cx, Real cy, const GFX::Color &color)
 {
@@ -433,7 +439,13 @@ img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh
 }
 
 
-
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+// Lights
+//
+//
+////////////////////////////////////////////////////////////////////////////////
 
 
 void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB, const GFX::vec4 &vC,
@@ -518,7 +530,6 @@ void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB,
     for (std::size_t i = 0; i < lights.size(); ++i)
       if (lights[i].type == Light::PointLight) {
         lightPos[i] = lights[i].vec();
-        //screen_coordinate(ctx, lightPos[i], d, cx, cy);
       }
 
     for (int y = minY; y <= maxY; ++y) {
@@ -592,9 +603,151 @@ void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB,
 
 }
 
+
+
+
+
+void draw_zbuffered_triangle(Ctx &ctx, const GFX::vec4 &vA, const GFX::vec4 &vB, const GFX::vec4 &vC,
+    const GFX::mat4 &invT, const GFX::mat4 &T, Real d, Real cx, Real cy, const std::vector<Light> &lights, const Material &material,
+    const std::vector<ShadowMask> &shadowMasks)
+{
+  assert(lights.size() == shadowMasks.size());
+
+  // apply model-view matrix (Model space -> Word Space -> View space)
+  GFX::vec4 A = T * vA;
+  GFX::vec4 B = T * vB;
+  GFX::vec4 C = T * vC;
+
+  GFX::vec3 u = GFX::vec3(B.data()) - GFX::vec3(A.data());
+  GFX::vec3 v = GFX::vec3(C.data()) - GFX::vec3(A.data());
+  GFX::vec3 w = u.cross(v);
+
+  // normal
+  const GFX::vec3 n = w.normalized();
+
+  GFX::Real k = w.dot(GFX::vec3(A.data()));
+  GFX::Real dzdx = -w.x() / (d * k);
+  GFX::Real dzdy = -w.y() / (d * k);
+
+  GFX::Real zG = 1.0 / (3.0 * A.z()) + 1.0 / (3.0 * B.z()) + 1.0 / (3.0 * C.z());
+
+  // project (View Space -> Screen space)
+  screen_coordinate(ctx, A, d, cx, cy);
+  screen_coordinate(ctx, B, d, cx, cy);
+  screen_coordinate(ctx, C, d, cx, cy);
+
+  GFX::Real xG = (A.x() + B.x() + C.x()) / 3.0;
+  GFX::Real yG = (A.y() + B.y() + C.y()) / 3.0;
+
+  // determine y range in screen coordinates
+  int minY = nearest(std::min(A.y(), std::min(B.y(), C.y())) + 0.5);
+  int maxY = nearest(std::max(A.y(), std::max(B.y(), C.y())) - 0.5);
+
+  // compute ambient light
+  GFX::ColorF ambient = GFX::Color::black();
+  for (auto light : lights) {
+    ambient.r += material.ambient.r * light.ambient.r;
+    ambient.g += material.ambient.g * light.ambient.g;
+    ambient.b += material.ambient.b * light.ambient.b;
+  }
+
+  std::vector<GFX::vec4> lightPos(lights.size(), GFX::vec4::Zero());
+  for (std::size_t i = 0; i < lights.size(); ++i)
+    if (lights[i].type == Light::PointLight) {
+      lightPos[i] = lights[i].vec();
+    }
+
+
+  for (int y = minY; y <= maxY; ++y) {
+    // compute x range in screen coordinates
+    std::pair<int, int> xRange = impl::compute_x_range(y, A, B, C);
+    int xL = xRange.first;
+    int xR = xRange.second;
+
+    for (int x = xL; x <= xR; ++x) {
+      // interpolate 1/z
+      GFX::Real one_over_z = 1.0001 * zG + (x - xG) * dzdx + (y - yG) * dzdy;
+      GFX::Real z = 1.0 / (zG + (x - xG) * dzdx + (y - yG) * dzdy);
+
+      GFX::ColorF color = ambient;
+      for (std::size_t i = 0; i < lights.size(); ++i)
+        if (lights[i].type == Light::PointLight) {
+          // convert pixel back to eye-coordinates
+          GFX::vec3 pixel(-z * (x - ctx.zBuffer.width() / 2.0 + cx) / d, -z * (y - ctx.zBuffer.height() / 2.0 + cy) / d, z);
+
+          // determine visibility from light source
+          GFX::vec4 P(-z * (x - ctx.zBuffer.width() / 2.0 + cx) / d,
+                      -z * (y - ctx.zBuffer.height() / 2.0 + cy) / d,
+                      z, 1.0);
+          P = invT * P;
+          P = shadowMasks[i].view * P;
+          screen_coordinate(shadowMasks[i].mask.width(), shadowMasks[i].mask.height(), P, shadowMasks[i].d, shadowMasks[i].dx, shadowMasks[i].dy);
+
+          // interpolate shadow mask depth
+          GFX::Real floor_x = std::max(0.0, std::min(shadowMasks[i].mask.width() - 1.0, std::floor(P.x())));
+          GFX::Real ceil_x = std::max(0.0, std::min(shadowMasks[i].mask.width() - 1.0, std::ceil(P.x())));
+          GFX::Real floor_y = std::max(0.0, std::min(shadowMasks[i].mask.height() - 1.0, std::floor(P.y())));
+          GFX::Real ceil_y = std::max(0.0, std::min(shadowMasks[i].mask.height() - 1.0, std::ceil(P.y())));
+
+          GFX::Real zA = shadowMasks[i].mask(floor_x, ceil_y);
+          GFX::Real zB = shadowMasks[i].mask(ceil_x, ceil_y);
+          GFX::Real zC = shadowMasks[i].mask(floor_x, floor_y);
+          GFX::Real zD = shadowMasks[i].mask(ceil_x, floor_y);
+
+          GFX::Real alpha_x = P.x() - std::floor(P.x());
+          GFX::Real alpha_y = P.y() - std::floor(P.y());
+          GFX::Real zE = (1.0 - alpha_x) / zA + alpha_x / zB;
+          GFX::Real zF = (1.0 - alpha_x) / zC + alpha_x / zD;
+          GFX::Real zShadow = (1.0 - alpha_y) / zE + alpha_y / zF;
+
+          GFX::Real delta = std::abs(zShadow - 1.0 / P.z());
+          if (delta > 10e-3)
+            continue;
+
+          // compute light dir
+          GFX::vec3 dir = GFX::vec3(lightPos[i].x(), lightPos[i].y(), lightPos[i].z()) - pixel;
+          GFX::Real cos_alpha = n.dot(dir.normalized());
+
+          if (cos_alpha > 0.0) {
+            color.r += material.diffuse.r * lights[i].diffuse.r * cos_alpha;
+            color.g += material.diffuse.g * lights[i].diffuse.g * cos_alpha;
+            color.b += material.diffuse.b * lights[i].diffuse.b * cos_alpha;
+          }
+
+          // do specular lighting if needed
+          if (material.reflection != 0.0) {
+            GFX::vec3 r = 2.0 * cos_alpha * n - dir.normalized();
+            GFX::Real cos_beta = r.dot((GFX::vec3(0.0, 0.0, d) - pixel).normalized());
+
+            if (cos_beta > 0.0 ) {
+              cos_beta = std::pow(cos_beta, material.reflection);
+
+              color.r += material.specular.r * lights[i].specular.r * cos_beta;
+              color.g += material.specular.g * lights[i].specular.g * cos_beta;
+              color.b += material.specular.b * lights[i].specular.b * cos_beta;
+            }
+          }
+
+
+        }
+
+      // draw the pixel
+      ctx.drawPixel(x, y, one_over_z, color);
+    }
+  }
+
+
+}
+
+
+
+
+
+
+
 img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &project,
     const std::vector<GFX::mat4> &modelMatrices, const std::vector<Light> &lights, const std::vector<Material> &materials,
-    int size, const img::Color &bgColor)
+    const std::vector<ShadowMask> &shadowMasks, int size, const img::Color &bgColor)
 {
   // compute some properties for the lines
   std::pair<Point2D, Point2D> minMax = std::make_pair(Point2D(std::numeric_limits<Real>::max(), std::numeric_limits<Real>::max()),
@@ -627,10 +780,69 @@ img::EasyImage draw_zbuffered_meshes(const std::vector<std::shared_ptr<GFX::Mesh
       const GFX::vec4 &B = meshes[i]->vertices()[face[1]];
       const GFX::vec4 &C = meshes[i]->vertices()[face[2]];
 
-      draw_zbuffered_triangle(ctx, A, B, C, project * modelMatrices[i], d, center.x, center.y, lights, materials[i]);
+      if (shadowMasks.empty())
+        draw_zbuffered_triangle(ctx, A, B, C, project * modelMatrices[i], d, center.x, center.y, lights, materials[i]);
+      else
+        draw_zbuffered_triangle(ctx, A, B, C, project.inverse(), project * modelMatrices[i], d, center.x, center.y, lights, materials[i], shadowMasks);
     }
   }
 
   return ctx.image;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+// Shadow
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+ShadowMask draw_shadow_mask(const std::vector<std::shared_ptr<GFX::Mesh> > &meshes, const GFX::mat4 &project,
+    const std::vector<GFX::mat4> &modelMatrices, int size)
+{
+  // compute some properties for the lines
+  std::pair<Point2D, Point2D> minMax = std::make_pair(Point2D(std::numeric_limits<Real>::max(), std::numeric_limits<Real>::max()),
+                                                      Point2D(std::numeric_limits<Real>::min(), std::numeric_limits<Real>::min()));
+
+  for (std::size_t i = 0; i < meshes.size(); ++i) {
+    std::pair<Point2D, Point2D> meshMinMax = get_min_max(*meshes[i], project * modelMatrices[i]);
+    if (meshMinMax.first.x < minMax.first.x)
+      minMax.first.x = meshMinMax.first.x;
+    if (meshMinMax.first.y < minMax.first.y)
+      minMax.first.y = meshMinMax.first.y;
+    if (meshMinMax.second.x > minMax.second.x)
+      minMax.second.x = meshMinMax.second.x;
+    if (meshMinMax.second.y > minMax.second.y)
+      minMax.second.y = meshMinMax.second.y;
+  }
+
+  std::pair<int, int> imageSizes = get_image_sizes(minMax, size);
+  Real d = get_scale_factor(minMax, imageSizes.first);
+  Point2D center = get_center(minMax, d);
+
+  Ctx ctx(imageSizes.first, imageSizes.second, img::Color());
+
+  std::vector<Light> dummyLights;
+  Material dummyMaterial;
+
+  for (std::size_t i = 0; i < meshes.size(); ++i) {
+    for (std::size_t j = 0; j < meshes[i]->faces().size(); ++j) {
+      const std::vector<int> &face = meshes[i]->faces()[j];
+      assert(face.size() == 3);
+
+      const GFX::vec4 &A = meshes[i]->vertices()[face[0]];
+      const GFX::vec4 &B = meshes[i]->vertices()[face[1]];
+      const GFX::vec4 &C = meshes[i]->vertices()[face[2]];
+
+      draw_zbuffered_triangle(ctx, A, B, C, project * modelMatrices[i], d, center.x, center.y, dummyLights, dummyMaterial);
+    }
+  }
+
+  return ShadowMask(ctx.zBuffer, project, d, center.x, center.y);
+}
