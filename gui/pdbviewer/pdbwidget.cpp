@@ -7,7 +7,6 @@
 
 #include <libgfx/lighting.h>
 #include <libgfx/shaders.h>
-#include <libgfx/ambientocclusion.h>
 
 #include <libgfx/context_traits.h>
 

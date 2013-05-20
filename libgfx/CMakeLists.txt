@@ -10,7 +10,6 @@ set(libgfx_SRCS
   transform.cpp
   mesh.cpp
   texture.cpp
-  ambientocclusion.cpp
 )
 
 add_library(libgfx SHARED ${libgfx_SRCS})
