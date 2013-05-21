@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <cctype>
 #include <sstream>
+#include <cstdlib>
 
 namespace
 {

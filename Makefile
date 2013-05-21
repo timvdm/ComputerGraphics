@@ -1,7 +1,17 @@
-CXX = g++
-FLAGS = -c -pedantic -Wall -Wno-reorder -Wno-sign-compare -Wno-enum-compare -std=c++11 -Ithirdparty/eigen3 -I.
+# determine g++ version
+#   4.6: use -std=c++0x
+#   4.7: use -std=c++11
+GXXVERSION := $(shell expr `$(CXX) -dumpversion`)
+ifeq ($(GXXVERSION),4.7)
+  CXXSTD = -std=c++11
+else
+  CXXSTD = -std=c++0x
+endif
+
+FLAGS = -c -O2 -pedantic -Wall -Wno-reorder -Wno-sign-compare -Wno-enum-compare -Ithirdparty/eigen3 -I. $(CXXSTD)
 
 all: engine
+#	echo $(FLAGS)
 
 ########################################
 #

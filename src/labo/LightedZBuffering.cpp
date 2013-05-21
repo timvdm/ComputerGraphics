@@ -387,8 +387,6 @@ namespace CG {
 
             } else if (type.substr(0, 5) == "Thick") {
 
-              shadowEpsilon = 10e-5;
-
               //
               // Thick figures
               //

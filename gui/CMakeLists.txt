@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(GfxGui)
 
+# define DATADIR for input files
+add_definitions(-DDATADIR="${CMAKE_SOURCE_DIR}/data/")
+
 include_directories(..)
 
 set(programs

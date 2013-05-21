@@ -10,7 +10,7 @@
 
 using namespace GFX;
 
-GFX::Real shadowEpsilon = 10e-3;
+GFX::Real shadowEpsilon = 10e-5;
 
 
 template<typename LinesXD>

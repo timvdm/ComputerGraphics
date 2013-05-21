@@ -68,7 +68,7 @@ struct Light
     return m_vec;
   }
 
-  const int type;
+  int type;
   GFX::ColorF ambient;
   GFX::ColorF diffuse;
   GFX::ColorF specular;
@@ -194,7 +194,7 @@ struct ShadowMask
   {
   }
 
-  const GFX::Buffer<GFX::Real> mask; // the shadow mask (z-buffer)
+  GFX::Buffer<GFX::Real> mask; // the shadow mask (z-buffer)
   GFX::mat4 view; // view matrix for light position
   GFX::Real d; // distance from origin to camera (light position)
   GFX::Real dx; // x displacement to screen coords

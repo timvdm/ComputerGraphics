@@ -50,7 +50,7 @@ struct TextureFragmentShader
 TextureWidget::TextureWidget(int width, int height, QWidget *parent) : GfxWidget(width, height, parent)
 {
   setEyeZ(5);
-  context().createTexture("house.bmp3");
+  context().createTexture(std::string(DATADIR) + "house.bmp3");
 }
 
 void TextureWidget::render()

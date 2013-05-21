@@ -14,10 +14,6 @@ add_subdirectory(src)
 add_subdirectory(libgfx)
 add_subdirectory(gui)
 
-#add_subdirectory(test)
-#add_subdirectory(OpenGL)
-
-
 ##################################################
 #
 # CPack
@@ -44,6 +40,7 @@ set(ignore_files
   OpenGL
   gen_html.py
   run_engine.py
+  data/house.svg
 )
 
 set(CPACK_SOURCE_IGNORE_FILES "${ignore_files}")

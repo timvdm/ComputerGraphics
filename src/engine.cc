@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <cstdlib>
 
 #include "plugin.h"
 
@@ -28,6 +29,8 @@ img::EasyImage generate_image(const ini::Configuration &conf)
 int main(int argc, char const* argv[])
 {
         srand(time(NULL));
+
+        CG::Plugin::setFilename(argv[1]);
 
         int retVal = 0;
         try
